@@ -285,14 +285,15 @@ function App() {
             <thead>
               <tr>
                 <th>Data Vencimento</th>
+                <th>Vencido</th>
                 <th>Data Documento</th>
+                <th>Data Receção</th>
                 <th>Tipo</th>
                 <th>Nº Documento</th>
                 <th>Valor</th>
                 <th>Valor Pago</th>
                 <th>Saldo</th>
                 <th>Saldo Acumulado</th>
-                <th>Vencido</th>
               </tr>
             </thead>
             <tbody>
@@ -309,14 +310,15 @@ function App() {
                 return (
                   <tr key={idx} className={`documento-regularizar-row ${vencido ? 'documento-vencido' : ''}`}>
                     <td>{formatDate(doc.data_vencimento)}</td>
+                    <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
                     <td>{formatDate(doc.data_documento)}</td>
+                    <td>{formatDate(doc.data_recepcao)}</td>
                     <td>{getTipoDocumento(doc.codigo_documento)}</td>
                     <td>{doc.numero_documento || '-'}</td>
                     <td className="valor-coluna">{formatCurrency(doc.valor_documento || 0)}</td>
                     <td className="valor-coluna">{formatCurrency(valor_pago)}</td>
                     <td className="saldo-pendente valor-coluna">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
                     <td className="saldo-acumulado valor-coluna">{formatCurrency(saldo_acumulado)}</td>
-                    <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
                   </tr>
                 )
               })}

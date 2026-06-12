@@ -41,11 +41,13 @@ A conexão usa Windows Authentication (GIWINDOWS):
 - **Database**: DBClassico
 - **Driver**: ODBC Driver 18 for SQL Server
 
-As tabelas utilizadas:
-- `TB0001CntAcumulPOC` - Saldos iniciais por conta
-- `TB0001CntLancLin` - Movimentos de contabilidade
-- `TB0001TesPagamento` - Dados dos pagamentos
-- `TB0001TesDocRegAbatidos` - Documentos regularizados
+## Tabelas Utilizadas
+
+- `TB0001CntAcumulPOC` - Saldos iniciais por conta (abertura_debito, abertura_credito, saldo_actual)
+- `TB0001CntLancLin` - Movimentos de contabilidade (diários 02, 04, 05; débito/crédito)
+- `TB0001TesPagamento` - Dados dos pagamentos (diário 05, código 5701)
+- `TB0001TesDocRegAbatidos` - Documentos regularizados por pagamento (invoices/notas de crédito abatidas)
+- `TB0001CntDocReg` - Documentos por regularizar (invoices/notas de crédito com saldo pendente)
 
 ## Funcionalidades Principais
 

@@ -208,6 +208,7 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
                 "codigo_documento": row_dict.get('Codigo_Documento'),
                 "descricao_doc_regul": row_dict.get('Descricao_Doc_Regul'),
                 "data_documento": row_dict.get('Data_Documento'),
+                "data_recepcao": row_dict.get('Data_Recepcao'),
                 "data_vencimento": row_dict.get('Data_Vencimento'),
                 "valor_documento": float(row_dict.get('Valor_Documento', 0)) if row_dict.get('Valor_Documento') else 0.0,
                 "valor_por_regularizar": float(row_dict.get('Valor_Por_Regularizar', 0)) if row_dict.get('Valor_Por_Regularizar') else 0.0
