@@ -21,6 +21,7 @@ interface ExtractoItem {
   codigo_diario?: string
   numero_documento_interno?: string
   codigo_documento?: string
+  liquidacao?: string
   parent_idx?: number
 }
 
@@ -105,6 +106,19 @@ function App() {
     }
   }
 
+  const getLiquidacao = (liquidacao: string | undefined) => {
+    if (!liquidacao) return '-'
+    const status = String(liquidacao).trim()
+    switch (status) {
+      case 'T':
+        return 'Pago'
+      case 'P':
+        return 'Parte'
+      default:
+        return status
+    }
+  }
+
   return (
     <div className="container">
       <h1>Extracto de Conta Corrente</h1>
@@ -177,6 +191,7 @@ function App() {
                 <th>Diário</th>
                 <th>Nº Doc Interno</th>
                 <th>Tipo Documento</th>
+                <th>Liquidação</th>
                 <th>Descrição</th>
                 <th>Débito</th>
                 <th>Crédito</th>
@@ -212,6 +227,12 @@ function App() {
                       : item.tipo === 'documento_pagamento'
                         ? 'Documento Pago'
                         : getTipoDocumento(item.codigo_documento)
+                    }
+                  </td>
+                  <td>
+                    {item.tipo === 'documento_pagamento'
+                      ? getLiquidacao(item.liquidacao)
+                      : '-'
                     }
                   </td>
                   <td>

@@ -142,6 +142,7 @@ def get_extracto(request: ExtractoRequest):
                             descricao = doc.get('descricao_doc_regul', '')
                             codigo_doc = doc.get("codigo_documento", "")
                             valor = doc.get("valor_abatido", 0.0)
+                            liquidacao = doc.get("liquidacao", "")
                             # Credit notes (3502) are shown as negative
                             if str(codigo_doc) == "3502":
                                 valor = -valor
@@ -153,6 +154,7 @@ def get_extracto(request: ExtractoRequest):
                                 "valor": valor,
                                 "tipo_movimento": "D",
                                 "codigo_documento": codigo_doc,
+                                "liquidacao": liquidacao,
                                 "saldo_acumulado": 0.0
                             })
                     except Exception as e:
