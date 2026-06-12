@@ -160,6 +160,15 @@ def get_extracto(request: ExtractoRequest):
                     except Exception as e:
                         print(f"Erro ao buscar documentos de pagamento: {e}")
 
+        # Add final balance line
+        extracto_completo.append({
+            "tipo": "saldo_final",
+            "data_hora": "",
+            "descricao": "Saldo Final",
+            "saldo_acumulado": saldo_acum,
+            "saldo_actual_db": saldo_inicial.get("saldo_actual", 0.0) if saldo_inicial else 0.0
+        })
+
         return {
             "saldo_inicial": saldo_inicial,
             "extracto_completo": extracto_completo

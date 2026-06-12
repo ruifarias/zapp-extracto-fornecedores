@@ -22,6 +22,7 @@ interface ExtractoItem {
   numero_documento_interno?: string
   codigo_documento?: string
   liquidacao?: string
+  saldo_actual_db?: number
   parent_idx?: number
 }
 
@@ -111,9 +112,9 @@ function App() {
     const status = String(liquidacao).trim()
     switch (status) {
       case 'T':
-        return 'Pago'
+        return 'Pago Totalmente'
       case 'P':
-        return 'Parte'
+        return 'Pago em Parte'
       default:
         return status
     }
@@ -202,13 +203,13 @@ function App() {
               {extracto.map((item, idx) => (
                 <tr
                   key={idx}
-                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''}`}
+                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''} ${item.tipo === 'saldo_final' ? 'saldo-final-row' : ''}`}
                 >
-                  <td>{formatDate(item.data_hora || item.data)}</td>
+                  <td>{item.tipo === 'saldo_final' ? '' : formatDate(item.data_hora || item.data)}</td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? '-'
-                      : item.tipo === 'documento_pagamento'
+                      : item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final'
                         ? ''
                         : item.codigo_diario || '-'
                     }
@@ -216,7 +217,7 @@ function App() {
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? '-'
-                      : item.tipo === 'documento_pagamento'
+                      : item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final'
                         ? ''
                         : item.numero_documento_interno || '-'
                     }
@@ -226,7 +227,9 @@ function App() {
                       ? 'Saldo Inicial'
                       : item.tipo === 'documento_pagamento'
                         ? 'Documento Pago'
-                        : getTipoDocumento(item.codigo_documento)
+                        : item.tipo === 'saldo_final'
+                          ? 'Saldo Final'
+                          : getTipoDocumento(item.codigo_documento)
                     }
                   </td>
                   <td>
@@ -238,14 +241,16 @@ function App() {
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo de Abertura'
-                      : item.descricao || item.numero_documento || '-'
+                      : item.tipo === 'saldo_final'
+                        ? `Saldo Apurado: ${formatCurrency(item.saldo_acumulado)} | BD: ${formatCurrency(item.saldo_actual_db || 0)}`
+                        : item.descricao || item.numero_documento || '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_debito || 0)
-                      : item.tipo === 'documento_pagamento'
-                        ? (item.valor && item.valor > 0 ? formatCurrency(item.valor) : '-')
+                      : item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final'
+                        ? (item.tipo === 'documento_pagamento' && item.valor && item.valor > 0 ? formatCurrency(item.valor) : '-')
                         : item.tipo_movimento === 'D'
                           ? formatCurrency(item.valor || 0)
                           : '-'
@@ -256,12 +261,14 @@ function App() {
                       ? formatCurrency(item.abertura_credito || 0)
                       : item.tipo === 'documento_pagamento'
                         ? (item.valor && item.valor < 0 ? formatCurrency(item.valor) : '-')
-                        : item.tipo_movimento === 'C'
-                          ? formatCurrency(item.valor || 0)
-                          : '-'
+                        : item.tipo === 'saldo_final'
+                          ? '-'
+                          : item.tipo_movimento === 'C'
+                            ? formatCurrency(item.valor || 0)
+                            : '-'
                     }
                   </td>
-                  <td className="saldo-acumulado">{item.tipo === 'documento_pagamento' ? '-' : formatCurrency(item.saldo_acumulado)}</td>
+                  <td className="saldo-acumulado">{item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final' ? (item.tipo === 'saldo_final' ? formatCurrency(item.saldo_acumulado) : '-') : formatCurrency(item.saldo_acumulado)}</td>
                 </tr>
               ))}
             </tbody>
