@@ -143,7 +143,7 @@ def get_extracto(request: ExtractoRequest):
                             extracto_completo.append({
                                 "tipo": "documento_pagamento",
                                 "data_hora": item["data_hora"],
-                                "descricao": f"  └─ {numero_doc} {descricao}" if numero_doc else f"  └─ {descricao}",
+                                "descricao": f"  └─ {descricao} {numero_doc}" if numero_doc else f"  └─ {descricao}",
                                 "numero_documento": numero_doc,
                                 "valor": doc.get("valor_abatido", 0.0),
                                 "tipo_movimento": "D",
