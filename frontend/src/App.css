@@ -149,6 +149,50 @@ button:disabled {
   color: #4caf50;
 }
 
+.extracto-table tbody tr.pagamento-row:hover {
+  background-color: #2a3a2a !important;
+  cursor: pointer;
+}
+
+.extracto-table tbody tr.documentos-row {
+  background-color: #1f2a1f;
+}
+
+.documentos-container {
+  padding: 15px;
+}
+
+.documentos-container h4 {
+  margin: 0 0 10px 0;
+  color: #4caf50;
+  font-size: 0.95em;
+}
+
+.documentos-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.documentos-table th {
+  background-color: #1a1a1a;
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid #4caf50;
+  color: #4caf50;
+}
+
+.documentos-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #333;
+}
+
+.documentos-table tbody tr:hover {
+  background-color: #2a2a2a;
+}
+
 .saldo-acumulado {
   font-weight: 600;
   color: #4caf50;

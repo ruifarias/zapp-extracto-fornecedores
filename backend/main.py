@@ -38,6 +38,15 @@ def get_contas(ano: Optional[int] = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/documentos-pagamento")
+def get_documentos_pagamento(ano: int, codigo_serie: str, numero: str):
+    """Obter documentos pagos de um pagamento específico"""
+    try:
+        documentos = db.get_documentos_pagamento(ano, codigo_serie, numero)
+        return {"documentos": documentos}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/extracto")
 def get_extracto(request: ExtractoRequest):
     """Gerar extracto de conta corrente com saldo inicial e movimentos"""
