@@ -140,15 +140,20 @@ def get_extracto(request: ExtractoRequest):
                         for doc in documentos:
                             numero_doc = doc.get("numero_documento", "")
                             descricao = doc.get('descricao_doc_regul', '')
+                            codigo_doc = doc.get("codigo_documento", "")
+                            valor = doc.get("valor_abatido", 0.0)
+                            # Credit notes (3502) are shown as negative
+                            if str(codigo_doc) == "3502":
+                                valor = -valor
                             extracto_completo.append({
                                 "tipo": "documento_pagamento",
                                 "data_hora": item["data_hora"],
                                 "descricao": f"  └─ {descricao} {numero_doc}" if numero_doc else f"  └─ {descricao}",
                                 "numero_documento": numero_doc,
-                                "valor": doc.get("valor_abatido", 0.0),
+                                "valor": valor,
                                 "tipo_movimento": "D",
-                                "codigo_documento": doc.get("codigo_documento", ""),
-                                "saldo_acumulado": saldo_acum
+                                "codigo_documento": codigo_doc,
+                                "saldo_acumulado": 0.0
                             })
                     except Exception as e:
                         print(f"Erro ao buscar documentos de pagamento: {e}")

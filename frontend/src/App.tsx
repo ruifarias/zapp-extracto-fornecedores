@@ -210,7 +210,7 @@ function App() {
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo Inicial'
                       : item.tipo === 'documento_pagamento'
-                        ? `Documento Pago (${item.numero_documento})`
+                        ? 'Documento Pago'
                         : getTipoDocumento(item.codigo_documento)
                     }
                   </td>
@@ -224,7 +224,7 @@ function App() {
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_debito || 0)
                       : item.tipo === 'documento_pagamento'
-                        ? (item.codigo_documento === 3502 ? '-' : formatCurrency(item.valor || 0))
+                        ? (item.valor && item.valor > 0 ? formatCurrency(item.valor) : '-')
                         : item.tipo_movimento === 'D'
                           ? formatCurrency(item.valor || 0)
                           : '-'
@@ -233,14 +233,14 @@ function App() {
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_credito || 0)
-                      : item.tipo === 'documento_pagamento' && item.codigo_documento === 3502
-                        ? formatCurrency(-(item.valor || 0))
+                      : item.tipo === 'documento_pagamento'
+                        ? (item.valor && item.valor < 0 ? formatCurrency(item.valor) : '-')
                         : item.tipo_movimento === 'C'
                           ? formatCurrency(item.valor || 0)
                           : '-'
                     }
                   </td>
-                  <td className="saldo-acumulado">{formatCurrency(item.saldo_acumulado)}</td>
+                  <td className="saldo-acumulado">{item.tipo === 'documento_pagamento' ? '-' : formatCurrency(item.saldo_acumulado)}</td>
                 </tr>
               ))}
             </tbody>
