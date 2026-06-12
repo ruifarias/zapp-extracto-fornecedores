@@ -87,8 +87,8 @@ def get_extracto(request: ExtractoRequest):
         for movimento in movimentos:
             extracto_completo.append(movimento)
 
-            # Se for um pagamento (diário 04, código 5701), buscar documentos
-            if movimento.get("codigo_diario") == "04" and movimento.get("codigo_documento") == 5701:
+            # Se for um pagamento (diário 05, código 5701), buscar documentos
+            if movimento.get("codigo_diario") == "05" and movimento.get("codigo_documento") == 5701:
                 try:
                     # Buscar número de pagamento a partir do número de documento
                     numero_pagamento = movimento.get("numero_documento_interno", "")
