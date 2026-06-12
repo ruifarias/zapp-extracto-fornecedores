@@ -170,6 +170,13 @@ button:disabled {
   color: #8bc34a;
 }
 
+.extracto-table td:nth-child(6),
+.extracto-table td:nth-child(7),
+.extracto-table td:nth-child(8) {
+  text-align: right;
+  font-weight: 500;
+}
+
 .extracto-table tbody tr.pagamento-row:hover {
   background-color: #2a3a2a !important;
   cursor: pointer;
