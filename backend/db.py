@@ -100,7 +100,7 @@ def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_
         print(f"Erro ao obter movimentos: {e}")
         return []
 
-def get_documentos_pagamento(ano: int, codigo_serie: str, numero_pagamento: str):
+def get_documentos_pagamento(ano: int, numero_pagamento: str, codigo_entidade: str):
     """Obter documentos regularizados/abatidos de um pagamento específico"""
     try:
         conn = get_connection()
@@ -134,12 +134,13 @@ def get_documentos_pagamento(ano: int, codigo_serie: str, numero_pagamento: str)
             AND td.Codigo_Serie = tp.Codigo_Serie
             AND td.Numero_Pagamento = tp.Numero
         WHERE tp.ano = ?
-            AND tp.Codigo_Serie = ?
             AND tp.Numero = ?
+            AND tp.Codigo_Documento = 5701
+            AND tp.Codigo_Entidade_Fornecedor = ?
         ORDER BY td.Data_Documento
         """
 
-        cursor.execute(query, (ano, codigo_serie, numero_pagamento))
+        cursor.execute(query, (ano, numero_pagamento, codigo_entidade))
         rows = cursor.fetchall()
         conn.close()
 

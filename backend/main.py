@@ -83,32 +83,25 @@ def get_extracto(request: ExtractoRequest):
                 "saldo_acumulado": saldo_acum
             })
 
+        # Extrair código de entidade (fornecedor) dos últimos 4 dígitos da conta
+        codigo_entidade = request.codigo_conta.split(".")[-1] if "." in request.codigo_conta else request.codigo_conta[-4:]
+
         # Adicionar movimentos com documentos de pagamentos
-        print(f"DEBUG: Total de movimentos: {len(movimentos)}")
         for movimento in movimentos:
             extracto_completo.append(movimento)
-
-            diario = movimento.get("codigo_diario")
-            cod_doc = movimento.get("codigo_documento")
-            print(f"DEBUG: Movimento - Diário: {diario}, Código Documento: {cod_doc} (tipo: {type(cod_doc)})")
 
             # Se for um pagamento (diário 05, código 5701), buscar documentos
             if str(movimento.get("codigo_diario")) == "05" and int(movimento.get("codigo_documento") or 0) == 5701:
                 try:
-                    # Buscar número de pagamento a partir do número de documento
+                    # Número de pagamento é o numero_documento_interno
                     numero_pagamento = movimento.get("numero_documento_interno", "")
-                    codigo_serie = "PG"  # Série padrão para pagamentos
-
-                    print(f"DEBUG: Buscando documentos para pagamento {numero_pagamento}, série {codigo_serie}")
 
                     if numero_pagamento:
                         documentos = db.get_documentos_pagamento(
                             request.ano,
-                            codigo_serie,
-                            numero_pagamento
+                            numero_pagamento,
+                            codigo_entidade
                         )
-
-                        print(f"DEBUG: Encontrados {len(documentos)} documentos")
 
                         # Adicionar documentos como linhas filhas
                         for doc in documentos:
