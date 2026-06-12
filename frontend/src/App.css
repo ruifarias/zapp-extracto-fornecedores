@@ -265,9 +265,30 @@ button:disabled {
   color: #ffb74d;
 }
 
+.documentos-regularizar-section tbody tr.documento-vencido {
+  background-color: #3a1a1a !important;
+  border-left: 3px solid #ff6b6b;
+}
+
+.documentos-regularizar-section tbody tr.documento-vencido td {
+  color: #ff6b6b;
+}
+
+.valor-coluna {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
 .saldo-pendente {
   font-weight: 600;
   color: #ff6b6b;
+}
+
+.vencido-coluna {
+  font-weight: 600;
+  color: #ff6b6b;
+  text-align: center;
 }
 
 .no-data {
