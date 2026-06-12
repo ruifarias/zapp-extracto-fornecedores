@@ -73,9 +73,14 @@ def get_extracto(request: ExtractoRequest):
         # Criar linha de saldo inicial
         extracto_completo = []
         if saldo_inicial:
+            # Se não tiver data, usar 01/01 do ano solicitado
+            data_saldo = saldo_inicial["data_hora"]
+            if not data_saldo:
+                data_saldo = f"{request.ano}-01-01"
+
             extracto_completo.append({
                 "tipo": "saldo_inicial",
-                "data_hora": saldo_inicial["data_hora"],
+                "data_hora": data_saldo,
                 "descricao": "Saldo Inicial",
                 "abertura_debito": saldo_inicial["abertura_debito"],
                 "abertura_credito": saldo_inicial["abertura_credito"],
