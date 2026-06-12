@@ -145,6 +145,7 @@ def get_extracto(request: ExtractoRequest):
                                 "numero_documento": doc.get("numero_documento", ""),
                                 "valor": doc.get("valor_abatido", 0.0),
                                 "tipo_movimento": "D",
+                                "codigo_documento": doc.get("codigo_documento", ""),
                                 "saldo_acumulado": saldo_acum
                             })
                     except Exception as e:
