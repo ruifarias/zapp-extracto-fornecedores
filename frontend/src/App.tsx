@@ -63,6 +63,8 @@ function App() {
 
     setLoading(true)
     setError('')
+    setExpandedRow(null)
+    setDocumentosPagamento([])
     try {
       const response = await axios.post('/api/extracto', {
         ano,
@@ -71,10 +73,14 @@ function App() {
         data_fim: dataFim,
       })
 
+      console.log('Extracto response:', response.data)
       setSaldoInicial(response.data.saldo_inicial)
-      setExtracto(response.data.extracto_completo || [])
+      const extractoData = response.data.extracto_completo || []
+      console.log('Extracto data:', extractoData)
+      setExtracto(extractoData)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erro ao gerar extracto')
+      console.error('Erro:', err)
+      setError(err.response?.data?.detail || err.message || 'Erro ao gerar extracto')
     } finally {
       setLoading(false)
     }
