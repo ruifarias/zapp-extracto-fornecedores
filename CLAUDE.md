@@ -112,13 +112,17 @@ npm install
 ### Executar
 ```bash
 # Terminal 1 - Backend
-python -m backend.main
+python -m backend.main  # Porta 8001
 
 # Terminal 2 - Frontend
-cd frontend && npm run dev
+cd frontend && npm run dev  # Porta 5173
 ```
 
 Acede em `http://localhost:5173`
+
+**Portas:**
+- Backend: 8001 (não conflita com zapp-reposicoes que usa 8000)
+- Frontend: 5173
 
 ### Build Produção
 ```bash

@@ -43,7 +43,7 @@ npm install
 python -m backend.main
 ```
 
-Server estará disponível em `http://localhost:8000`
+Server estará disponível em `http://localhost:8001`
 
 ### Frontend (em outra terminal)
 
@@ -53,6 +53,8 @@ npm run dev
 ```
 
 Aplicação estará disponível em `http://localhost:5173`
+
+**Nota:** Porta 8001 foi escolhida para não conflitar com zapp-reposicoes (que usa 8000).
 
 ## Build para Produção
 
