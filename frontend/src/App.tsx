@@ -284,29 +284,30 @@ function App() {
           <table>
             <thead>
               <tr>
-                <th>Nº Documento</th>
-                <th>Tipo</th>
-                <th>Descrição</th>
-                <th>Data Documento</th>
                 <th>Data Vencimento</th>
+                <th>Data Documento</th>
+                <th>Tipo</th>
+                <th>Nº Documento</th>
                 <th>Valor</th>
                 <th>Valor Pago</th>
                 <th>Saldo</th>
               </tr>
             </thead>
             <tbody>
-              {documentosPorRegularizar.map((doc, idx) => (
-                <tr key={idx} className="documento-regularizar-row">
-                  <td>{doc.numero_documento || '-'}</td>
-                  <td>{getTipoDocumento(doc.codigo_documento)}</td>
-                  <td>{doc.descricao_doc_regul || '-'}</td>
-                  <td>{formatDate(doc.data_documento)}</td>
-                  <td>{formatDate(doc.data_vencimento)}</td>
-                  <td>{formatCurrency(doc.valor_documento || 0)}</td>
-                  <td>{formatCurrency(doc.valor_pago || 0)}</td>
-                  <td className="saldo-pendente">{formatCurrency(doc.saldo || 0)}</td>
-                </tr>
-              ))}
+              {documentosPorRegularizar.map((doc, idx) => {
+                const valor_pago = (doc.valor_documento || 0) - (doc.saldo || 0)
+                return (
+                  <tr key={idx} className="documento-regularizar-row">
+                    <td>{formatDate(doc.data_vencimento)}</td>
+                    <td>{formatDate(doc.data_documento)}</td>
+                    <td>{getTipoDocumento(doc.codigo_documento)}</td>
+                    <td>{doc.numero_documento || '-'}</td>
+                    <td>{formatCurrency(doc.valor_documento || 0)}</td>
+                    <td>{formatCurrency(valor_pago)}</td>
+                    <td className="saldo-pendente">{formatCurrency(doc.saldo || 0)}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
