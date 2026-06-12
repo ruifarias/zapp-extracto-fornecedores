@@ -174,6 +174,52 @@ def get_documentos_pagamento(ano: int, numero_pagamento: str, codigo_entidade: s
         print(f"Erro ao obter documentos de pagamento: {e}")
         return []
 
+def get_documentos_por_regularizar(ano: int, codigo_conta: str):
+    """Obter documentos por regularizar de uma conta"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT
+            Numero_Documento,
+            Tipo_Movimento,
+            Codigo_Documento,
+            Descricao_Doc_Regul,
+            Data_Documento,
+            Data_Vencimento,
+            Valor_Documento,
+            Valor_Regularizado,
+            Valor_Saldo
+        FROM [DBClassico].[dbo].[TB0001CntDocReg]
+        WHERE YEAR(Data_Documento) = ?
+            AND Codigo_Conta = ?
+        ORDER BY Data_Documento
+        """
+
+        cursor.execute(query, (ano, codigo_conta))
+        rows = cursor.fetchall()
+        conn.close()
+
+        documentos = []
+        for row in rows:
+            documentos.append({
+                "numero_documento": row[0],
+                "tipo_movimento": row[1],
+                "codigo_documento": row[2],
+                "descricao_doc_regul": row[3],
+                "data_documento": row[4],
+                "data_vencimento": row[5],
+                "valor_documento": float(row[6]) if row[6] else 0.0,
+                "valor_pago": float(row[7]) if row[7] else 0.0,
+                "saldo": float(row[8]) if row[8] else 0.0
+            })
+
+        return documentos
+    except Exception as e:
+        print(f"Erro ao obter documentos por regularizar: {e}")
+        return []
+
 def get_contas_disponiveis(ano: int = None):
     """Obter lista de contas 22.1.1.1.* e 22.1.1.2.* com movimentos e descrição"""
     try:

@@ -169,9 +169,16 @@ def get_extracto(request: ExtractoRequest):
             "saldo_actual_db": saldo_inicial.get("saldo_actual", 0.0) if saldo_inicial else 0.0
         })
 
+        # Get pending documents to be regularized
+        documentos_por_regularizar = db.get_documentos_por_regularizar(
+            request.ano,
+            request.codigo_conta
+        )
+
         return {
             "saldo_inicial": saldo_inicial,
-            "extracto_completo": extracto_completo
+            "extracto_completo": extracto_completo,
+            "documentos_por_regularizar": documentos_por_regularizar
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

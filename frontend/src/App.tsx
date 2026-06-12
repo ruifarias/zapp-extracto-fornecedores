@@ -34,6 +34,7 @@ function App() {
   const [dataFim, setDataFim] = useState(`${ano}-12-31`)
   const [extracto, setExtracto] = useState<ExtractoItem[]>([])
   const [saldoInicial, setSaldoInicial] = useState<any>(null)
+  const [documentosPorRegularizar, setDocumentosPorRegularizar] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [descricaoContaSelecionada, setDescricaoContaSelecionada] = useState('')
@@ -72,6 +73,7 @@ function App() {
 
       setSaldoInicial(response.data.saldo_inicial)
       setExtracto(response.data.extracto_completo || [])
+      setDocumentosPorRegularizar(response.data.documentos_por_regularizar || [])
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erro ao gerar extracto')
     } finally {
@@ -269,6 +271,40 @@ function App() {
                     }
                   </td>
                   <td className="saldo-acumulado">{item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final' ? (item.tipo === 'saldo_final' ? formatCurrency(item.saldo_acumulado) : '-') : formatCurrency(item.saldo_acumulado)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {documentosPorRegularizar.length > 0 && (
+        <div className="documentos-regularizar-section">
+          <h3>Documentos Por Regularizar</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Documento</th>
+                <th>Tipo</th>
+                <th>Descrição</th>
+                <th>Data Documento</th>
+                <th>Data Vencimento</th>
+                <th>Valor</th>
+                <th>Valor Pago</th>
+                <th>Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentosPorRegularizar.map((doc, idx) => (
+                <tr key={idx} className="documento-regularizar-row">
+                  <td>{doc.numero_documento || '-'}</td>
+                  <td>{getTipoDocumento(doc.codigo_documento)}</td>
+                  <td>{doc.descricao_doc_regul || '-'}</td>
+                  <td>{formatDate(doc.data_documento)}</td>
+                  <td>{formatDate(doc.data_vencimento)}</td>
+                  <td>{formatCurrency(doc.valor_documento || 0)}</td>
+                  <td>{formatCurrency(doc.valor_pago || 0)}</td>
+                  <td className="saldo-pendente">{formatCurrency(doc.saldo || 0)}</td>
                 </tr>
               ))}
             </tbody>
