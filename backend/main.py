@@ -84,8 +84,13 @@ def get_extracto(request: ExtractoRequest):
             })
 
         # Adicionar movimentos com documentos de pagamentos
+        print(f"DEBUG: Total de movimentos: {len(movimentos)}")
         for movimento in movimentos:
             extracto_completo.append(movimento)
+
+            diario = movimento.get("codigo_diario")
+            cod_doc = movimento.get("codigo_documento")
+            print(f"DEBUG: Movimento - Diário: {diario}, Código Documento: {cod_doc} (tipo: {type(cod_doc)})")
 
             # Se for um pagamento (diário 05, código 5701), buscar documentos
             if str(movimento.get("codigo_diario")) == "05" and int(movimento.get("codigo_documento") or 0) == 5701:
