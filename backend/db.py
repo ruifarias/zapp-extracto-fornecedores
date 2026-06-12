@@ -100,17 +100,21 @@ def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_
         return []
 
 def get_contas_disponiveis():
-    """Obter lista de contas com movimentos"""
+    """Obter lista de contas 22.1.1.1.* e 22.1.1.2.* com movimentos e descrição"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
         query = """
         SELECT DISTINCT
-            Codigo_Conta
-        FROM [DBClassico].[dbo].[TB0001CntLancLin]
-        WHERE Ano = YEAR(GETDATE())
-        ORDER BY Codigo_Conta
+            tl.Codigo_Conta,
+            ISNULL(tp.Descricao_Conta, '') AS Descricao_Conta
+        FROM [DBClassico].[dbo].[TB0001CntLancLin] tl
+        LEFT JOIN [DBClassico].[dbo].[TB0001CntPlanoCAlternativo] tp
+            ON tp.Codigo_Conta = tl.Codigo_Conta
+        WHERE tl.Ano = YEAR(GETDATE())
+            AND (tl.Codigo_Conta LIKE '22.1.1.1.%' OR tl.Codigo_Conta LIKE '22.1.1.2.%')
+        ORDER BY tl.Codigo_Conta
         """
 
         cursor.execute(query)
@@ -120,7 +124,10 @@ def get_contas_disponiveis():
         contas = []
         for row in rows:
             if row[0]:
-                contas.append({"codigo_conta": row[0]})
+                contas.append({
+                    "codigo_conta": row[0],
+                    "descricao_conta": row[1] if row[1] else ""
+                })
 
         return contas
     except Exception as e:

@@ -4,6 +4,7 @@ import './App.css'
 
 interface Conta {
   codigo_conta: string
+  descricao_conta?: string
 }
 
 interface ExtractoItem {
@@ -110,7 +111,7 @@ function App() {
             <option value="">-- Seleccione uma conta --</option>
             {contas.map((c) => (
               <option key={c.codigo_conta} value={c.codigo_conta}>
-                {c.codigo_conta}
+                {c.codigo_conta} - {c.descricao_conta}
               </option>
             ))}
           </select>
