@@ -88,11 +88,13 @@ def get_extracto(request: ExtractoRequest):
             extracto_completo.append(movimento)
 
             # Se for um pagamento (diário 05, código 5701), buscar documentos
-            if movimento.get("codigo_diario") == "05" and movimento.get("codigo_documento") == 5701:
+            if str(movimento.get("codigo_diario")) == "05" and int(movimento.get("codigo_documento") or 0) == 5701:
                 try:
                     # Buscar número de pagamento a partir do número de documento
                     numero_pagamento = movimento.get("numero_documento_interno", "")
                     codigo_serie = "PG"  # Série padrão para pagamentos
+
+                    print(f"DEBUG: Buscando documentos para pagamento {numero_pagamento}, série {codigo_serie}")
 
                     if numero_pagamento:
                         documentos = db.get_documentos_pagamento(
@@ -100,6 +102,8 @@ def get_extracto(request: ExtractoRequest):
                             codigo_serie,
                             numero_pagamento
                         )
+
+                        print(f"DEBUG: Encontrados {len(documentos)} documentos")
 
                         # Adicionar documentos como linhas filhas
                         for doc in documentos:
