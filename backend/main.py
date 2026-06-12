@@ -77,6 +77,12 @@ def get_extracto(request: ExtractoRequest):
         # Adicionar movimentos
         extracto_completo.extend(movimentos)
 
+        # Converter todas as datas para string no formato ISO para ordenação consistente
+        from datetime import datetime as dt
+        for item in extracto_completo:
+            if isinstance(item["data_hora"], dt):
+                item["data_hora"] = item["data_hora"].isoformat()
+
         # Ordenar por data
         extracto_completo.sort(key=lambda x: x["data_hora"])
 
