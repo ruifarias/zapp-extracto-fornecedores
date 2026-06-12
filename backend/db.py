@@ -1,4 +1,5 @@
 import pyodbc
+from datetime import datetime
 
 CONN_STR = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
@@ -99,9 +100,12 @@ def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_
         print(f"Erro ao obter movimentos: {e}")
         return []
 
-def get_contas_disponiveis():
+def get_contas_disponiveis(ano: int = None):
     """Obter lista de contas 22.1.1.1.* e 22.1.1.2.* com movimentos e descrição"""
     try:
+        if ano is None:
+            ano = datetime.now().year
+
         conn = get_connection()
         cursor = conn.cursor()
 
@@ -112,12 +116,13 @@ def get_contas_disponiveis():
         FROM [DBClassico].[dbo].[TB0001CntLancLin] tl
         LEFT JOIN [DBClassico].[dbo].[TB0001CntPOC] tp
             ON tp.Codigo_Conta = tl.Codigo_Conta
-        WHERE tl.Ano = YEAR(GETDATE())
+            AND tp.Ano = tl.Ano
+        WHERE tl.Ano = ?
             AND (tl.Codigo_Conta LIKE '22.1.1.1.%' OR tl.Codigo_Conta LIKE '22.1.1.2.%')
         ORDER BY tl.Codigo_Conta
         """
 
-        cursor.execute(query)
+        cursor.execute(query, (ano,))
         rows = cursor.fetchall()
         conn.close()
 

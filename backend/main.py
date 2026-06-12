@@ -30,10 +30,10 @@ def health():
     return {"status": "ok"}
 
 @app.get("/api/contas")
-def get_contas():
-    """Obter lista de contas disponíveis"""
+def get_contas(ano: Optional[int] = None):
+    """Obter lista de contas disponíveis para um ano específico"""
     try:
-        contas = db.get_contas_disponiveis()
+        contas = db.get_contas_disponiveis(ano)
         return {"contas": contas}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

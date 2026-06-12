@@ -33,12 +33,15 @@ function App() {
 
   useEffect(() => {
     fetchContas()
-  }, [])
+  }, [ano])
 
   const fetchContas = async () => {
     try {
-      const response = await axios.get('/api/contas')
+      const response = await axios.get('/api/contas', {
+        params: { ano }
+      })
       setContas(response.data.contas)
+      setCodigoConta('')
     } catch (err) {
       setError('Erro ao carregar contas')
     }
