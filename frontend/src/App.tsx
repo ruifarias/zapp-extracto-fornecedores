@@ -81,6 +81,21 @@ function App() {
     }).format(value)
   }
 
+  const getTipoDocumento = (codigoDocumento: number | string | undefined) => {
+    if (!codigoDocumento) return '-'
+    const codigo = String(codigoDocumento).trim()
+    switch (codigo) {
+      case '3302':
+        return 'V/Factura'
+      case '3502':
+        return 'V/Nota Crédito'
+      case '5701':
+        return 'Pagamento'
+      default:
+        return codigo
+    }
+  }
+
   return (
     <div className="container">
       <h1>Extracto de Conta Corrente</h1>
@@ -147,9 +162,9 @@ function App() {
             <thead>
               <tr>
                 <th>Data</th>
-                <th>Tipo</th>
                 <th>Diário</th>
                 <th>Nº Doc Interno</th>
+                <th>Tipo Documento</th>
                 <th>Descrição</th>
                 <th>Débito</th>
                 <th>Crédito</th>
@@ -162,12 +177,6 @@ function App() {
                   <td>{formatDate(item.data_hora || item.data)}</td>
                   <td>
                     {item.tipo === 'saldo_inicial'
-                      ? 'Saldo Inicial'
-                      : 'Movimento'
-                    }
-                  </td>
-                  <td>
-                    {item.tipo === 'saldo_inicial'
                       ? '-'
                       : item.codigo_diario || '-'
                     }
@@ -176,6 +185,12 @@ function App() {
                     {item.tipo === 'saldo_inicial'
                       ? '-'
                       : item.numero_documento_interno || '-'
+                    }
+                  </td>
+                  <td>
+                    {item.tipo === 'saldo_inicial'
+                      ? 'Saldo Inicial'
+                      : getTipoDocumento(item.codigo_documento)
                     }
                   </td>
                   <td>
