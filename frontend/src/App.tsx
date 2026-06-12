@@ -291,11 +291,15 @@ function App() {
                 <th>Valor</th>
                 <th>Valor Pago</th>
                 <th>Saldo</th>
+                <th>Saldo Acumulado</th>
               </tr>
             </thead>
             <tbody>
               {documentosPorRegularizar.map((doc, idx) => {
-                const valor_pago = (doc.valor_documento || 0) - (doc.saldo || 0)
+                const valor_pago = (doc.valor_documento || 0) - (doc.valor_por_regularizar || 0)
+                const saldo_acumulado = documentosPorRegularizar
+                  .slice(0, idx + 1)
+                  .reduce((acc, d) => acc + (d.valor_por_regularizar || 0), 0)
                 return (
                   <tr key={idx} className="documento-regularizar-row">
                     <td>{formatDate(doc.data_vencimento)}</td>
@@ -304,7 +308,8 @@ function App() {
                     <td>{doc.numero_documento || '-'}</td>
                     <td>{formatCurrency(doc.valor_documento || 0)}</td>
                     <td>{formatCurrency(valor_pago)}</td>
-                    <td className="saldo-pendente">{formatCurrency(doc.saldo || 0)}</td>
+                    <td className="saldo-pendente">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
+                    <td className="saldo-acumulado">{formatCurrency(saldo_acumulado)}</td>
                   </tr>
                 )
               })}

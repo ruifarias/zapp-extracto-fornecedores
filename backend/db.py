@@ -180,15 +180,9 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
         conn = get_connection()
         cursor = conn.cursor()
 
+        # Try with all available columns to debug
         query = """
-        SELECT
-            Numero_Documento,
-            Tipo_Movimento,
-            Codigo_Documento,
-            Descricao_Doc_Regul,
-            Data_Documento,
-            Data_Vencimento,
-            Valor_Documento
+        SELECT *
         FROM [DBClassico].[dbo].[TB0001CntDocReg]
         WHERE YEAR(Data_Documento) = ?
             AND Codigo_Conta = ?
@@ -197,20 +191,26 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
 
         cursor.execute(query, (ano, codigo_conta))
         rows = cursor.fetchall()
+
+        # Get column names
+        column_names = [desc[0] for desc in cursor.description]
+
         conn.close()
 
         documentos = []
         for row in rows:
+            # Create dict with all columns
+            row_dict = {column_names[i]: row[i] for i in range(len(column_names))}
+
             documentos.append({
-                "numero_documento": row[0],
-                "tipo_movimento": row[1],
-                "codigo_documento": row[2],
-                "descricao_doc_regul": row[3],
-                "data_documento": row[4],
-                "data_vencimento": row[5],
-                "valor_documento": float(row[6]) if row[6] else 0.0,
-                "valor_pago": 0.0,
-                "saldo": float(row[6]) if row[6] else 0.0
+                "numero_documento": row_dict.get('Numero_Documento'),
+                "tipo_movimento": row_dict.get('Tipo_Movimento'),
+                "codigo_documento": row_dict.get('Codigo_Documento'),
+                "descricao_doc_regul": row_dict.get('Descricao_Doc_Regul'),
+                "data_documento": row_dict.get('Data_Documento'),
+                "data_vencimento": row_dict.get('Data_Vencimento'),
+                "valor_documento": float(row_dict.get('Valor_Documento', 0)) if row_dict.get('Valor_Documento') else 0.0,
+                "valor_por_regularizar": float(row_dict.get('Valor_Por_Regularizar', 0)) if row_dict.get('Valor_Por_Regularizar') else 0.0
             })
 
         return documentos
