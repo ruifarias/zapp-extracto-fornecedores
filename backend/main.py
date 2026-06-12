@@ -86,60 +86,69 @@ def get_extracto(request: ExtractoRequest):
         # Extrair código de entidade (fornecedor) dos últimos 4 dígitos da conta
         codigo_entidade = request.codigo_conta.split(".")[-1] if "." in request.codigo_conta else request.codigo_conta[-4:]
 
-        # Adicionar movimentos com documentos de pagamentos
+        # Step 1: Build base list (saldo_inicial + movements only, no docs)
+        extracto_base = []
+        if saldo_inicial:
+            data_saldo = f"{request.ano}-01-01"
+            extracto_base.append({
+                "tipo": "saldo_inicial",
+                "data_hora": data_saldo,
+                "descricao": "Saldo Inicial",
+                "abertura_debito": saldo_inicial["abertura_debito"],
+                "abertura_credito": saldo_inicial["abertura_credito"],
+                "saldo_acumulado": saldo_acum
+            })
+
         for movimento in movimentos:
-            extracto_completo.append(movimento)
+            extracto_base.append(movimento)
 
-            # Se for um pagamento (diário 05, código 5701), buscar documentos
-            if str(movimento.get("codigo_diario")) == "05" and int(movimento.get("codigo_documento") or 0) == 5701:
-                try:
-                    # Número de pagamento é o numero_documento_interno
-                    numero_pagamento = movimento.get("numero_documento_interno", "")
+        # Step 2: Convert datetime objects and sort
+        from datetime import datetime as dt
+        for item in extracto_base:
+            if isinstance(item.get("data_hora"), dt):
+                item["data_hora"] = item["data_hora"].isoformat()
 
-                    if numero_pagamento:
+        extracto_base.sort(key=lambda x: x["data_hora"])
+
+        # Step 3: Final pass — calculate balance + insert docs after each payment
+        extracto_completo = []
+        for item in extracto_base:
+            if item["tipo"] == "saldo_inicial":
+                extracto_completo.append(item)
+                continue
+
+            # Update running balance (movements only)
+            if item["tipo_movimento"] == "D":
+                saldo_acum += item["valor"]
+            else:
+                saldo_acum -= item["valor"]
+            item["saldo_acumulado"] = saldo_acum
+            extracto_completo.append(item)
+
+            # If payment, append sub-document lines (informational, no balance impact)
+            if str(item.get("codigo_diario")) == "05" and int(item.get("codigo_documento") or 0) == 5701:
+                numero_pagamento = item.get("numero_documento", "")
+                if numero_pagamento:
+                    try:
+                        # Extract numeric part from payment number (e.g. 'PG4706' -> 4706)
+                        numero_pagamento_num = int(''.join(filter(str.isdigit, numero_pagamento)))
                         documentos = db.get_documentos_pagamento(
                             request.ano,
-                            numero_pagamento,
+                            numero_pagamento_num,
                             codigo_entidade
                         )
-
-                        # Adicionar documentos como linhas filhas
                         for doc in documentos:
                             extracto_completo.append({
                                 "tipo": "documento_pagamento",
-                                "data_hora": doc.get("data_documento", ""),
+                                "data_hora": item["data_hora"],
                                 "descricao": f"  └─ {doc.get('descricao_doc_regul', '')}",
                                 "numero_documento": doc.get("numero_documento", ""),
                                 "valor": doc.get("valor_abatido", 0.0),
                                 "tipo_movimento": "D",
-                                "saldo_acumulado": 0.0,
-                                "parent_idx": len(extracto_completo) - 1
+                                "saldo_acumulado": saldo_acum
                             })
-                except Exception as e:
-                    print(f"Erro ao buscar documentos de pagamento: {e}")
-
-        # Converter todas as datas para string no formato ISO para ordenação consistente
-        from datetime import datetime as dt
-        for item in extracto_completo:
-            if isinstance(item["data_hora"], dt):
-                item["data_hora"] = item["data_hora"].isoformat()
-
-        # Ordenar por data
-        extracto_completo.sort(key=lambda x: x["data_hora"])
-
-        # Calcular saldos acumulados para movimentos e documentos
-        for item in extracto_completo:
-            if item["tipo"] == "saldo_inicial":
-                continue  # Saldo inicial já tem seu valor
-
-            if item["tipo"] in ["movimento", "documento_pagamento"]:
-                # D = débito (positivo), C = crédito (negativo)
-                if item["tipo_movimento"] == "D":
-                    saldo_acum += item["valor"]
-                else:
-                    saldo_acum -= item["valor"]
-
-            item["saldo_acumulado"] = saldo_acum
+                    except Exception as e:
+                        print(f"Erro ao buscar documentos de pagamento: {e}")
 
         return {
             "saldo_inicial": saldo_inicial,
