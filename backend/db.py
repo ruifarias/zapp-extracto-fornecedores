@@ -188,9 +188,7 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
             Descricao_Doc_Regul,
             Data_Documento,
             Data_Vencimento,
-            Valor_Documento,
-            Valor_Regularizado,
-            Valor_Saldo
+            Valor_Documento
         FROM [DBClassico].[dbo].[TB0001CntDocReg]
         WHERE YEAR(Data_Documento) = ?
             AND Codigo_Conta = ?
@@ -211,8 +209,8 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
                 "data_documento": row[4],
                 "data_vencimento": row[5],
                 "valor_documento": float(row[6]) if row[6] else 0.0,
-                "valor_pago": float(row[7]) if row[7] else 0.0,
-                "saldo": float(row[8]) if row[8] else 0.0
+                "valor_pago": 0.0,
+                "saldo": float(row[6]) if row[6] else 0.0
             })
 
         return documentos
