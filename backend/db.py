@@ -110,7 +110,7 @@ def get_contas_disponiveis():
             tl.Codigo_Conta,
             ISNULL(tp.Descricao_Conta, '') AS Descricao_Conta
         FROM [DBClassico].[dbo].[TB0001CntLancLin] tl
-        LEFT JOIN [DBClassico].[dbo].[TB0001CntPlanoCAlternativo] tp
+        LEFT JOIN [DBClassico].[dbo].[TB0001CntPOC] tp
             ON tp.Codigo_Conta = tl.Codigo_Conta
         WHERE tl.Ano = YEAR(GETDATE())
             AND (tl.Codigo_Conta LIKE '22.1.1.1.%' OR tl.Codigo_Conta LIKE '22.1.1.2.%')
