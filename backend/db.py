@@ -48,7 +48,7 @@ def get_saldo_inicial(ano: int, codigo_conta: str, codigo_moeda: str = "001"):
         return None
 
 def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_fim):
-    """Obter movimentos de contabilidade (débito/crédito) da conta"""
+    """Obter movimentos de contabilidade (débito/crédito) da conta - Diário 02 apenas"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -68,6 +68,7 @@ def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_
         FROM [DBClassico].[dbo].[TB0001CntLancLin]
         WHERE Ano = ?
             AND Codigo_Conta = ?
+            AND Codigo_Diario = '02'
             AND Data_Hora >= ?
             AND Data_Hora <= ?
         ORDER BY Data_Hora
