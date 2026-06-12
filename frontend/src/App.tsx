@@ -21,7 +21,7 @@ interface ExtractoItem {
 
 function App() {
   const [contas, setContas] = useState<Conta[]>([])
-  const [codigoConta, setCodigoConta] = useState('22.1.1.2.0116')
+  const [codigoConta, setCodigoConta] = useState('')
   const [ano, setAno] = useState(new Date().getFullYear())
   const [dataInicio, setDataInicio] = useState(`${ano}-01-01`)
   const [dataFim, setDataFim] = useState(`${ano}-12-31`)
@@ -103,18 +103,17 @@ function App() {
       <div className="filters">
         <div className="form-group">
           <label>Código Conta:</label>
-          <input
-            type="text"
+          <select
             value={codigoConta}
             onChange={(e) => setCodigoConta(e.target.value)}
-            placeholder="Ex: 22.1.1.2.0116"
-            list="contas-list"
-          />
-          <datalist id="contas-list">
+          >
+            <option value="">-- Seleccione uma conta --</option>
             {contas.map((c) => (
-              <option key={c.codigo_conta} value={c.codigo_conta} />
+              <option key={c.codigo_conta} value={c.codigo_conta}>
+                {c.codigo_conta}
+              </option>
             ))}
-          </datalist>
+          </select>
         </div>
 
         <div className="form-group">
