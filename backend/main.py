@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 import backend.db as db
 
-app = FastAPI(title="Extracto Fornecedor API")
+app = FastAPI(title="Extracto Conta Corrente API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,33 +17,30 @@ app.add_middleware(
 
 class ExtractoRequest(BaseModel):
     ano: int
-    codigo_fornecedor: str
     codigo_conta: str
     data_inicio: date
     data_fim: date
 
 class ExtractoResponse(BaseModel):
     saldo_inicial: Optional[dict]
-    movimentos: List[dict]
-    pagamentos: List[dict]
     extracto_completo: List[dict]
 
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
 
-@app.get("/api/fornecedores")
-def get_fornecedores():
-    """Obter lista de fornecedores"""
+@app.get("/api/contas")
+def get_contas():
+    """Obter lista de contas disponíveis"""
     try:
-        fornecedores = db.get_fornecedores()
-        return {"fornecedores": fornecedores}
+        contas = db.get_contas_disponiveis()
+        return {"contas": contas}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/extracto")
 def get_extracto(request: ExtractoRequest):
-    """Gerar extracto de conta corrente"""
+    """Gerar extracto de conta corrente com saldo inicial e movimentos"""
     try:
         # Obter saldo inicial
         saldo_inicial = db.get_saldo_inicial(
@@ -55,14 +52,6 @@ def get_extracto(request: ExtractoRequest):
         movimentos = db.get_movimentos_contabilidade(
             request.ano,
             request.codigo_conta,
-            request.data_inicio,
-            request.data_fim
-        )
-
-        # Obter pagamentos e documentos
-        pagamentos = db.get_pagamentos_e_documentos(
-            request.ano,
-            request.codigo_fornecedor,
             request.data_inicio,
             request.data_fim
         )
@@ -87,14 +76,13 @@ def get_extracto(request: ExtractoRequest):
                 "saldo_acumulado": saldo_acum
             })
 
-        # Combinar movimentos e pagamentos
+        # Adicionar movimentos
         extracto_completo.extend(movimentos)
-        extracto_completo.extend(pagamentos)
 
         # Ordenar por data
-        extracto_completo.sort(key=lambda x: x["data_hora"] if "data_hora" in x else x.get("data", ""))
+        extracto_completo.sort(key=lambda x: x["data_hora"])
 
-        # Calcular saldos acumulados
+        # Calcular saldos acumulados para movimentos
         for item in extracto_completo:
             if item["tipo"] == "saldo_inicial":
                 continue  # Saldo inicial já tem seu valor
@@ -105,16 +93,11 @@ def get_extracto(request: ExtractoRequest):
                     saldo_acum += item["valor"]
                 else:
                     saldo_acum -= item["valor"]
-            else:  # pagamento
-                # Pagamento é débito (reduz o saldo do fornecedor)
-                saldo_acum -= item["valor_pagamento_liquido"]
 
             item["saldo_acumulado"] = saldo_acum
 
         return {
             "saldo_inicial": saldo_inicial,
-            "movimentos": movimentos,
-            "pagamentos": pagamentos,
             "extracto_completo": extracto_completo
         }
     except Exception as e:

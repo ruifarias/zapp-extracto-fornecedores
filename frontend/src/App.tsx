@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
-interface Fornecedor {
-  codigo: string
-  nome: string
-  numero_contribuinte: string
+interface Conta {
+  codigo_conta: string
 }
 
 interface ExtractoItem {
@@ -14,42 +12,40 @@ interface ExtractoItem {
   tipo: string
   tipo_movimento?: string
   valor?: number
-  valor_pagamento_liquido?: number
   numero_documento?: string
-  numero?: string
-  nome?: string
+  descricao?: string
   saldo_acumulado: number
-  descricao_doc_regul?: string
+  abertura_debito?: number
+  abertura_credito?: number
 }
 
 function App() {
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
-  const [selectedFornecedor, setSelectedFornecedor] = useState('')
+  const [contas, setContas] = useState<Conta[]>([])
+  const [codigoConta, setCodigoConta] = useState('22.1.1.2.0116')
   const [ano, setAno] = useState(new Date().getFullYear())
   const [dataInicio, setDataInicio] = useState(`${ano}-01-01`)
   const [dataFim, setDataFim] = useState(`${ano}-12-31`)
-  const [codigoConta, setCodigoConta] = useState('22.1.1.2.0116')
   const [extracto, setExtracto] = useState<ExtractoItem[]>([])
   const [saldoInicial, setSaldoInicial] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchFornecedores()
+    fetchContas()
   }, [])
 
-  const fetchFornecedores = async () => {
+  const fetchContas = async () => {
     try {
-      const response = await axios.get('/api/fornecedores')
-      setFornecedores(response.data.fornecedores)
+      const response = await axios.get('/api/contas')
+      setContas(response.data.contas)
     } catch (err) {
-      setError('Erro ao carregar fornecedores')
+      setError('Erro ao carregar contas')
     }
   }
 
   const handleGerarExtracto = async () => {
-    if (!selectedFornecedor || !codigoConta) {
-      setError('Por favor, selecione um fornecedor e conta')
+    if (!codigoConta) {
+      setError('Por favor, selecione uma conta')
       return
     }
 
@@ -58,7 +54,6 @@ function App() {
     try {
       const response = await axios.post('/api/extracto', {
         ano,
-        codigo_fornecedor: selectedFornecedor,
         codigo_conta: codigoConta,
         data_inicio: dataInicio,
         data_fim: dataFim,
@@ -88,19 +83,23 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Extracto de Conta - Fornecedores</h1>
+      <h1>Extracto de Conta Corrente</h1>
 
       <div className="filters">
         <div className="form-group">
-          <label>Fornecedor:</label>
-          <select value={selectedFornecedor} onChange={(e) => setSelectedFornecedor(e.target.value)}>
-            <option value="">-- Seleccione --</option>
-            {fornecedores.map((f) => (
-              <option key={f.codigo} value={f.codigo}>
-                {f.nome} ({f.numero_contribuinte})
-              </option>
+          <label>Código Conta:</label>
+          <input
+            type="text"
+            value={codigoConta}
+            onChange={(e) => setCodigoConta(e.target.value)}
+            placeholder="Ex: 22.1.1.2.0116"
+            list="contas-list"
+          />
+          <datalist id="contas-list">
+            {contas.map((c) => (
+              <option key={c.codigo_conta} value={c.codigo_conta} />
             ))}
-          </select>
+          </datalist>
         </div>
 
         <div className="form-group">
@@ -134,16 +133,6 @@ function App() {
           />
         </div>
 
-        <div className="form-group">
-          <label>Código Conta:</label>
-          <input
-            type="text"
-            value={codigoConta}
-            onChange={(e) => setCodigoConta(e.target.value)}
-            placeholder="Ex: 22.1.1.2.0116"
-          />
-        </div>
-
         <button onClick={handleGerarExtracto} disabled={loading}>
           {loading ? 'Gerando...' : 'Gerar Extracto'}
         </button>
@@ -153,7 +142,7 @@ function App() {
 
       {extracto.length > 0 && (
         <div className="extracto-table">
-          <h3>Extracto de Movimentos</h3>
+          <h3>Extracto de Movimentos - {codigoConta}</h3>
           <table>
             <thead>
               <tr>
@@ -172,39 +161,29 @@ function App() {
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo Inicial'
-                      : item.tipo === 'movimento'
-                        ? 'Movto'
-                        : 'Pagto'
+                      : 'Movimento'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo de Abertura'
-                      : item.tipo === 'movimento'
-                        ? item.numero_documento || '-'
-                        : item.descricao_doc_regul || item.nome || '-'
+                      : item.numero_documento || '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_debito || 0)
-                      : item.tipo === 'movimento' && item.tipo_movimento === 'D'
+                      : item.tipo_movimento === 'D'
                         ? formatCurrency(item.valor || 0)
-                        : (item.tipo !== 'movimento' && item.tipo === 'pagamento' && item.tipo_movimento === 'D'
-                          ? formatCurrency(item.valor_pagamento_liquido || 0)
-                          : '-'
-                        )
+                        : '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_credito || 0)
-                      : item.tipo === 'movimento' && item.tipo_movimento === 'C'
+                      : item.tipo_movimento === 'C'
                         ? formatCurrency(item.valor || 0)
-                        : (item.tipo !== 'movimento' && item.tipo === 'pagamento' && item.tipo_movimento === 'C'
-                          ? formatCurrency(item.valor_pagamento_liquido || 0)
-                          : '-'
-                        )
+                        : '-'
                     }
                   </td>
                   <td className="saldo-acumulado">{formatCurrency(item.saldo_acumulado)}</td>
