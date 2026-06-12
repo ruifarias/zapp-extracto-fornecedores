@@ -278,54 +278,112 @@ function App() {
         </div>
       )}
 
-      {documentosPorRegularizar.length > 0 && (
-        <div className="documentos-regularizar-section">
-          <h3>Documentos Por Regularizar</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Data Vencimento</th>
-                <th>Vencido</th>
-                <th>Data Documento</th>
-                <th>Data Receção</th>
-                <th>Tipo</th>
-                <th>Nº Documento</th>
-                <th>Valor</th>
-                <th>Valor Pago</th>
-                <th>Saldo</th>
-                <th>Saldo Acumulado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentosPorRegularizar.map((doc, idx) => {
-                const valor_pago = (doc.valor_documento || 0) - (doc.valor_por_regularizar || 0)
-                const saldo_acumulado = documentosPorRegularizar
-                  .slice(0, idx + 1)
-                  .reduce((acc, d) => acc + (d.valor_por_regularizar || 0), 0)
+      {(() => {
+        const docsRegularizar = documentosPorRegularizar.filter(d => d.codigo_documento !== '3501')
+        const notasDevolvidas = documentosPorRegularizar.filter(d => d.codigo_documento === '3501')
 
-                const data_vencimento = new Date(doc.data_vencimento || '')
-                const hoje = new Date()
-                const vencido = data_vencimento < hoje && (doc.valor_por_regularizar || 0) > 0
+        return (
+          <>
+            {docsRegularizar.length > 0 && (
+              <div className="documentos-regularizar-section">
+                <h3>Documentos Por Regularizar</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data Vencimento</th>
+                      <th>Vencido</th>
+                      <th>Data Documento</th>
+                      <th>Data Receção</th>
+                      <th>Tipo</th>
+                      <th>Nº Documento</th>
+                      <th>Valor</th>
+                      <th>Valor Pago</th>
+                      <th>Saldo</th>
+                      <th>Saldo Acumulado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {docsRegularizar.map((doc, idx) => {
+                      const valor_pago = (doc.valor_documento || 0) - (doc.valor_por_regularizar || 0)
+                      const saldo_acumulado = docsRegularizar
+                        .slice(0, idx + 1)
+                        .reduce((acc, d) => acc + (d.valor_por_regularizar || 0), 0)
 
-                return (
-                  <tr key={idx} className={`documento-regularizar-row ${vencido ? 'documento-vencido' : ''}`}>
-                    <td>{formatDate(doc.data_vencimento)}</td>
-                    <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
-                    <td>{formatDate(doc.data_documento)}</td>
-                    <td>{formatDate(doc.data_recepcao)}</td>
-                    <td>{getTipoDocumento(doc.codigo_documento)}</td>
-                    <td>{doc.numero_documento || '-'}</td>
-                    <td className="valor-coluna">{formatCurrency(doc.valor_documento || 0)}</td>
-                    <td className="valor-coluna">{formatCurrency(valor_pago)}</td>
-                    <td className="saldo-pendente valor-coluna">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
-                    <td className="saldo-acumulado valor-coluna">{formatCurrency(saldo_acumulado)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      const data_vencimento = new Date(doc.data_vencimento || '')
+                      const hoje = new Date()
+                      const vencido = data_vencimento < hoje && (doc.valor_por_regularizar || 0) > 0
+
+                      return (
+                        <tr key={idx} className={`documento-regularizar-row ${vencido ? 'documento-vencido' : ''}`}>
+                          <td>{formatDate(doc.data_vencimento)}</td>
+                          <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
+                          <td>{formatDate(doc.data_documento)}</td>
+                          <td>{formatDate(doc.data_recepcao)}</td>
+                          <td>{getTipoDocumento(doc.codigo_documento)}</td>
+                          <td>{doc.numero_documento || '-'}</td>
+                          <td className="valor-coluna">{formatCurrency(doc.valor_documento || 0)}</td>
+                          <td className="valor-coluna">{formatCurrency(valor_pago)}</td>
+                          <td className="saldo-pendente valor-coluna">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
+                          <td className="saldo-acumulado valor-coluna">{formatCurrency(saldo_acumulado)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {notasDevolvidas.length > 0 && (
+              <div className="notas-devolvidas-section">
+                <h3>Notas de Devolução não creditadas</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data Vencimento</th>
+                      <th>Vencido</th>
+                      <th>Data Documento</th>
+                      <th>Data Receção</th>
+                      <th>Tipo</th>
+                      <th>Nº Documento</th>
+                      <th>Valor</th>
+                      <th>Valor Pago</th>
+                      <th>Saldo</th>
+                      <th>Saldo Acumulado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {notasDevolvidas.map((doc, idx) => {
+                      const valor_pago = (doc.valor_documento || 0) - (doc.valor_por_regularizar || 0)
+                      const saldo_acumulado = notasDevolvidas
+                        .slice(0, idx + 1)
+                        .reduce((acc, d) => acc + (d.valor_por_regularizar || 0), 0)
+
+                      const data_vencimento = new Date(doc.data_vencimento || '')
+                      const hoje = new Date()
+                      const vencido = data_vencimento < hoje && (doc.valor_por_regularizar || 0) > 0
+
+                      return (
+                        <tr key={idx} className={`documento-devolvido-row ${vencido ? 'documento-vencido' : ''}`}>
+                          <td>{formatDate(doc.data_vencimento)}</td>
+                          <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
+                          <td>{formatDate(doc.data_documento)}</td>
+                          <td>{formatDate(doc.data_recepcao)}</td>
+                          <td>{getTipoDocumento(doc.codigo_documento)}</td>
+                          <td>{doc.numero_documento || '-'}</td>
+                          <td className="valor-coluna">{formatCurrency(doc.valor_documento || 0)}</td>
+                          <td className="valor-coluna">{formatCurrency(valor_pago)}</td>
+                          <td className="saldo-pendente valor-coluna">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
+                          <td className="saldo-acumulado valor-coluna">{formatCurrency(saldo_acumulado)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {extracto.length === 0 && !error && saldoInicial && (
         <div className="no-data">Sem movimentos para o período seleccionado</div>
