@@ -149,6 +149,16 @@ button:disabled {
   color: #4caf50;
 }
 
+.extracto-table tbody tr.documento-pagamento-row {
+  background-color: #1f2a1f;
+  font-size: 0.9em;
+}
+
+.extracto-table tbody tr.documento-pagamento-row td {
+  padding: 4px 12px;
+  color: #8bc34a;
+}
+
 .extracto-table tbody tr.pagamento-row:hover {
   background-color: #2a3a2a !important;
   cursor: pointer;

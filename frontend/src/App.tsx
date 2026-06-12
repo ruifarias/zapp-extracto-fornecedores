@@ -21,6 +21,7 @@ interface ExtractoItem {
   codigo_diario?: string
   numero_documento_interno?: string
   codigo_documento?: string
+  parent_idx?: number
 }
 
 function App() {
@@ -184,38 +185,49 @@ function App() {
             </thead>
             <tbody>
               {extracto.map((item, idx) => (
-                <tr key={idx} className={item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''}>
+                <tr
+                  key={idx}
+                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''}`}
+                >
                   <td>{formatDate(item.data_hora || item.data)}</td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? '-'
-                      : item.codigo_diario || '-'
+                      : item.tipo === 'documento_pagamento'
+                        ? ''
+                        : item.codigo_diario || '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? '-'
-                      : item.numero_documento_interno || '-'
+                      : item.tipo === 'documento_pagamento'
+                        ? ''
+                        : item.numero_documento_interno || '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo Inicial'
-                      : getTipoDocumento(item.codigo_documento)
+                      : item.tipo === 'documento_pagamento'
+                        ? 'Documento Pago'
+                        : getTipoDocumento(item.codigo_documento)
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo de Abertura'
-                      : item.numero_documento || '-'
+                      : item.descricao || item.numero_documento || '-'
                     }
                   </td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? formatCurrency(item.abertura_debito || 0)
-                      : item.tipo_movimento === 'D'
+                      : item.tipo === 'documento_pagamento'
                         ? formatCurrency(item.valor || 0)
-                        : '-'
+                        : item.tipo_movimento === 'D'
+                          ? formatCurrency(item.valor || 0)
+                          : '-'
                     }
                   </td>
                   <td>

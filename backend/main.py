@@ -83,8 +83,38 @@ def get_extracto(request: ExtractoRequest):
                 "saldo_acumulado": saldo_acum
             })
 
-        # Adicionar movimentos
-        extracto_completo.extend(movimentos)
+        # Adicionar movimentos com documentos de pagamentos
+        for movimento in movimentos:
+            extracto_completo.append(movimento)
+
+            # Se for um pagamento (diário 04, código 5701), buscar documentos
+            if movimento.get("codigo_diario") == "04" and movimento.get("codigo_documento") == 5701:
+                try:
+                    # Buscar número de pagamento a partir do número de documento
+                    numero_pagamento = movimento.get("numero_documento_interno", "")
+                    codigo_serie = "PG"  # Série padrão para pagamentos
+
+                    if numero_pagamento:
+                        documentos = db.get_documentos_pagamento(
+                            request.ano,
+                            codigo_serie,
+                            numero_pagamento
+                        )
+
+                        # Adicionar documentos como linhas filhas
+                        for doc in documentos:
+                            extracto_completo.append({
+                                "tipo": "documento_pagamento",
+                                "data_hora": doc.get("data_documento", ""),
+                                "descricao": f"  └─ {doc.get('descricao_doc_regul', '')}",
+                                "numero_documento": doc.get("numero_documento", ""),
+                                "valor": doc.get("valor_abatido", 0.0),
+                                "tipo_movimento": "D",
+                                "saldo_acumulado": 0.0,
+                                "parent_idx": len(extracto_completo) - 1
+                            })
+                except Exception as e:
+                    print(f"Erro ao buscar documentos de pagamento: {e}")
 
         # Converter todas as datas para string no formato ISO para ordenação consistente
         from datetime import datetime as dt
@@ -95,12 +125,12 @@ def get_extracto(request: ExtractoRequest):
         # Ordenar por data
         extracto_completo.sort(key=lambda x: x["data_hora"])
 
-        # Calcular saldos acumulados para movimentos
+        # Calcular saldos acumulados para movimentos e documentos
         for item in extracto_completo:
             if item["tipo"] == "saldo_inicial":
                 continue  # Saldo inicial já tem seu valor
 
-            if item["tipo"] == "movimento":
+            if item["tipo"] in ["movimento", "documento_pagamento"]:
                 # D = débito (positivo), C = crédito (negativo)
                 if item["tipo_movimento"] == "D":
                     saldo_acum += item["valor"]
