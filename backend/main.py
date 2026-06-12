@@ -138,11 +138,13 @@ def get_extracto(request: ExtractoRequest):
                             codigo_entidade
                         )
                         for doc in documentos:
+                            numero_doc = doc.get("numero_documento", "")
+                            descricao = doc.get('descricao_doc_regul', '')
                             extracto_completo.append({
                                 "tipo": "documento_pagamento",
                                 "data_hora": item["data_hora"],
-                                "descricao": f"  └─ {doc.get('descricao_doc_regul', '')}",
-                                "numero_documento": doc.get("numero_documento", ""),
+                                "descricao": f"  └─ {numero_doc} {descricao}" if numero_doc else f"  └─ {descricao}",
+                                "numero_documento": numero_doc,
                                 "valor": doc.get("valor_abatido", 0.0),
                                 "tipo_movimento": "D",
                                 "codigo_documento": doc.get("codigo_documento", ""),
