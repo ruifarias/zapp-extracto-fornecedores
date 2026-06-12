@@ -20,8 +20,7 @@ interface ExtractoItem {
   abertura_credito?: number
   codigo_diario?: string
   numero_documento_interno?: string
-  codigo_serie?: string
-  numero_pagamento?: string
+  codigo_documento?: string
 }
 
 function App() {
@@ -35,9 +34,6 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [descricaoContaSelecionada, setDescricaoContaSelecionada] = useState('')
-  const [expandedRow, setExpandedRow] = useState<number | null>(null)
-  const [documentosPagamento, setDocumentosPagamento] = useState<any[]>([])
-  const [loadingDocumentos, setLoadingDocumentos] = useState(false)
 
   useEffect(() => {
     fetchContas()
@@ -63,8 +59,6 @@ function App() {
 
     setLoading(true)
     setError('')
-    setExpandedRow(null)
-    setDocumentosPagamento([])
     try {
       const response = await axios.post('/api/extracto', {
         ano,
@@ -73,14 +67,10 @@ function App() {
         data_fim: dataFim,
       })
 
-      console.log('Extracto response:', response.data)
       setSaldoInicial(response.data.saldo_inicial)
-      const extractoData = response.data.extracto_completo || []
-      console.log('Extracto data:', extractoData)
-      setExtracto(extractoData)
+      setExtracto(response.data.extracto_completo || [])
     } catch (err: any) {
-      console.error('Erro:', err)
-      setError(err.response?.data?.detail || err.message || 'Erro ao gerar extracto')
+      setError(err.response?.data?.detail || 'Erro ao gerar extracto')
     } finally {
       setLoading(false)
     }
@@ -111,33 +101,6 @@ function App() {
         return 'Pagamento'
       default:
         return codigo
-    }
-  }
-
-  const handleExpandPagamento = async (idx: number, item: ExtractoItem) => {
-    if (expandedRow === idx) {
-      setExpandedRow(null)
-      setDocumentosPagamento([])
-      return
-    }
-
-    if (item.codigo_diario !== '04') return
-
-    setLoadingDocumentos(true)
-    try {
-      const response = await axios.get('/api/documentos-pagamento', {
-        params: {
-          ano,
-          codigo_serie: item.codigo_serie || '',
-          numero: item.numero_pagamento || ''
-        }
-      })
-      setDocumentosPagamento(response.data.documentos)
-      setExpandedRow(idx)
-    } catch (err) {
-      console.error('Erro ao carregar documentos:', err)
-    } finally {
-      setLoadingDocumentos(false)
     }
   }
 
@@ -221,13 +184,8 @@ function App() {
             </thead>
             <tbody>
               {extracto.map((item, idx) => (
-                <React.Fragment key={idx}>
-                  <tr
-                    className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.codigo_documento === '5701' ? 'pagamento-row' : ''}`}
-                    onClick={() => item.codigo_documento === '5701' && handleExpandPagamento(idx, item)}
-                    style={{ cursor: item.codigo_documento === '5701' ? 'pointer' : 'default' }}
-                  >
-                    <td>{formatDate(item.data_hora || item.data)}</td>
+                <tr key={idx} className={item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''}>
+                  <td>{formatDate(item.data_hora || item.data)}</td>
                   <td>
                     {item.tipo === 'saldo_inicial'
                       ? '-'
@@ -269,47 +227,7 @@ function App() {
                     }
                   </td>
                   <td className="saldo-acumulado">{formatCurrency(item.saldo_acumulado)}</td>
-                  </tr>
-                  {expandedRow === idx && item.codigo_documento === '5701' && (
-                    <tr className="documentos-row">
-                      <td colSpan={8}>
-                        <div className="documentos-container">
-                          <h4>Documentos Pagos</h4>
-                          {loadingDocumentos ? (
-                            <p>Carregando documentos...</p>
-                          ) : documentosPagamento.length > 0 ? (
-                            <table className="documentos-table">
-                              <thead>
-                                <tr>
-                                  <th>Data Doc</th>
-                                  <th>Nº Documento</th>
-                                  <th>Descrição</th>
-                                  <th>Valor Doc</th>
-                                  <th>Valor Abatido</th>
-                                  <th>Vencimento</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {documentosPagamento.map((doc, docIdx) => (
-                                  <tr key={docIdx}>
-                                    <td>{formatDate(doc.data_documento)}</td>
-                                    <td>{doc.numero_documento || '-'}</td>
-                                    <td>{doc.descricao_doc_regul || '-'}</td>
-                                    <td>{formatCurrency(doc.valor_documento)}</td>
-                                    <td>{formatCurrency(doc.valor_abatido)}</td>
-                                    <td>{formatDate(doc.data_vencimento)}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          ) : (
-                            <p>Sem documentos</p>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
+                </tr>
               ))}
             </tbody>
           </table>
