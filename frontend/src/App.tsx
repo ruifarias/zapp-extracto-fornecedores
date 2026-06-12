@@ -151,19 +151,6 @@ function App() {
 
       {error && <div className="error">{error}</div>}
 
-      {saldoInicial && (
-        <div className="saldo-inicial">
-          <h3>Saldo Inicial</h3>
-          <p>
-            Abertura Débito: <strong>{formatCurrency(saldoInicial.abertura_debito)}</strong>
-            {' | '}
-            Abertura Crédito: <strong>{formatCurrency(saldoInicial.abertura_credito)}</strong>
-            {' | '}
-            Saldo: <strong>{formatCurrency(saldoInicial.abertura_debito - saldoInicial.abertura_credito)}</strong>
-          </p>
-        </div>
-      )}
-
       {extracto.length > 0 && (
         <div className="extracto-table">
           <h3>Extracto de Movimentos</h3>
@@ -180,31 +167,44 @@ function App() {
             </thead>
             <tbody>
               {extracto.map((item, idx) => (
-                <tr key={idx}>
+                <tr key={idx} className={item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''}>
                   <td>{formatDate(item.data_hora || item.data)}</td>
-                  <td>{item.tipo === 'movimento' ? 'Movto' : 'Pagto'}</td>
                   <td>
-                    {item.tipo === 'movimento'
-                      ? item.numero_documento || '-'
-                      : item.descricao_doc_regul || item.nome || '-'
+                    {item.tipo === 'saldo_inicial'
+                      ? 'Saldo Inicial'
+                      : item.tipo === 'movimento'
+                        ? 'Movto'
+                        : 'Pagto'
                     }
                   </td>
                   <td>
-                    {item.tipo === 'movimento' && item.tipo_movimento === 'D'
-                      ? formatCurrency(item.valor || 0)
-                      : (item.tipo !== 'movimento' && item.tipo_movimento === 'D'
-                        ? formatCurrency(item.valor_pagamento_liquido || 0)
-                        : '-'
-                      )
+                    {item.tipo === 'saldo_inicial'
+                      ? 'Saldo de Abertura'
+                      : item.tipo === 'movimento'
+                        ? item.numero_documento || '-'
+                        : item.descricao_doc_regul || item.nome || '-'
                     }
                   </td>
                   <td>
-                    {item.tipo === 'movimento' && item.tipo_movimento === 'C'
-                      ? formatCurrency(item.valor || 0)
-                      : (item.tipo !== 'movimento' && item.tipo_movimento === 'C'
-                        ? formatCurrency(item.valor_pagamento_liquido || 0)
-                        : '-'
-                      )
+                    {item.tipo === 'saldo_inicial'
+                      ? formatCurrency(item.abertura_debito || 0)
+                      : item.tipo === 'movimento' && item.tipo_movimento === 'D'
+                        ? formatCurrency(item.valor || 0)
+                        : (item.tipo !== 'movimento' && item.tipo === 'pagamento' && item.tipo_movimento === 'D'
+                          ? formatCurrency(item.valor_pagamento_liquido || 0)
+                          : '-'
+                        )
+                    }
+                  </td>
+                  <td>
+                    {item.tipo === 'saldo_inicial'
+                      ? formatCurrency(item.abertura_credito || 0)
+                      : item.tipo === 'movimento' && item.tipo_movimento === 'C'
+                        ? formatCurrency(item.valor || 0)
+                        : (item.tipo !== 'movimento' && item.tipo === 'pagamento' && item.tipo_movimento === 'C'
+                          ? formatCurrency(item.valor_pagamento_liquido || 0)
+                          : '-'
+                        )
                     }
                   </td>
                   <td className="saldo-acumulado">{formatCurrency(item.saldo_acumulado)}</td>

@@ -67,14 +67,33 @@ def get_extracto(request: ExtractoRequest):
             request.data_fim
         )
 
-        # Combinar e ordenar por data
-        extracto_completo = movimentos + pagamentos
+        # Inicializar saldo acumulado
+        saldo_acum = saldo_inicial["abertura_debito"] - saldo_inicial["abertura_credito"] if saldo_inicial else 0.0
+
+        # Criar linha de saldo inicial
+        extracto_completo = []
+        if saldo_inicial:
+            extracto_completo.append({
+                "tipo": "saldo_inicial",
+                "data_hora": saldo_inicial["data_hora"],
+                "descricao": "Saldo Inicial",
+                "abertura_debito": saldo_inicial["abertura_debito"],
+                "abertura_credito": saldo_inicial["abertura_credito"],
+                "saldo_acumulado": saldo_acum
+            })
+
+        # Combinar movimentos e pagamentos
+        extracto_completo.extend(movimentos)
+        extracto_completo.extend(pagamentos)
+
+        # Ordenar por data
         extracto_completo.sort(key=lambda x: x["data_hora"] if "data_hora" in x else x.get("data", ""))
 
         # Calcular saldos acumulados
-        saldo_acum = saldo_inicial["abertura_debito"] - saldo_inicial["abertura_credito"] if saldo_inicial else 0.0
-
         for item in extracto_completo:
+            if item["tipo"] == "saldo_inicial":
+                continue  # Saldo inicial já tem seu valor
+
             if item["tipo"] == "movimento":
                 # D = débito (positivo), C = crédito (negativo)
                 if item["tipo_movimento"] == "D":
