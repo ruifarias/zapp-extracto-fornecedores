@@ -30,6 +30,7 @@ function App() {
   const [saldoInicial, setSaldoInicial] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [descricaoContaSelecionada, setDescricaoContaSelecionada] = useState('')
 
   useEffect(() => {
     fetchContas()
@@ -109,10 +110,14 @@ function App() {
           <label>Código Conta:</label>
           <select
             value={codigoConta}
-            onChange={(e) => setCodigoConta(e.target.value)}
+            onChange={(e) => {
+              setCodigoConta(e.target.value)
+              const contaSelecionada = contas.find(c => c.codigo_conta === e.target.value)
+              setDescricaoContaSelecionada(contaSelecionada?.descricao_conta || '')
+            }}
           >
             <option value="">-- Seleccione uma conta --</option>
-            {contas.map((c) => (
+            {[...contas].sort((a, b) => (a.descricao_conta || '').localeCompare(b.descricao_conta || '')).map((c) => (
               <option key={c.codigo_conta} value={c.codigo_conta}>
                 {c.codigo_conta} - {c.descricao_conta}
               </option>
@@ -160,7 +165,7 @@ function App() {
 
       {extracto.length > 0 && (
         <div className="extracto-table">
-          <h3>Extracto de Movimentos - {codigoConta}</h3>
+          <h3>Extracto de Movimentos - {codigoConta} {descricaoContaSelecionada && `- ${descricaoContaSelecionada}`}</h3>
           <table>
             <thead>
               <tr>
