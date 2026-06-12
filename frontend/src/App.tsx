@@ -148,6 +148,8 @@ function App() {
               <tr>
                 <th>Data</th>
                 <th>Tipo</th>
+                <th>Diário</th>
+                <th>Nº Doc Interno</th>
                 <th>Descrição</th>
                 <th>Débito</th>
                 <th>Crédito</th>
@@ -162,6 +164,18 @@ function App() {
                     {item.tipo === 'saldo_inicial'
                       ? 'Saldo Inicial'
                       : 'Movimento'
+                    }
+                  </td>
+                  <td>
+                    {item.tipo === 'saldo_inicial'
+                      ? '-'
+                      : item.codigo_diario || '-'
+                    }
+                  </td>
+                  <td>
+                    {item.tipo === 'saldo_inicial'
+                      ? '-'
+                      : item.numero_documento_interno || '-'
                     }
                   </td>
                   <td>
