@@ -1,9 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from datetime import datetime, date
 from pydantic import BaseModel
 from typing import Optional, List
 import backend.db as db
+import os
 
 app = FastAPI(title="Extracto Conta Corrente API")
 
@@ -57,6 +60,11 @@ def get_extracto(request: ExtractoRequest):
             request.codigo_conta
         )
 
+        # Converter data_hora do saldo_inicial para string
+        if saldo_inicial and saldo_inicial.get('data_hora'):
+            if hasattr(saldo_inicial['data_hora'], 'isoformat'):
+                saldo_inicial['data_hora'] = saldo_inicial['data_hora'].isoformat()
+
         # Obter movimentos de contabilidade
         movimentos = db.get_movimentos_contabilidade(
             request.ano,
@@ -64,6 +72,21 @@ def get_extracto(request: ExtractoRequest):
             request.data_inicio,
             request.data_fim
         )
+
+        # Filtrar movimentos por data
+        from datetime import datetime as dt_parser
+        data_inicio_dt = dt_parser.fromisoformat(str(request.data_inicio))
+        data_fim_dt = dt_parser.fromisoformat(str(request.data_fim))
+
+        movimentos_filtrados = []
+        for movimento in movimentos:
+            data_movimento = movimento.get("data_hora")
+            if isinstance(data_movimento, str):
+                data_movimento = dt_parser.fromisoformat(data_movimento[:10])
+            if data_inicio_dt <= data_movimento <= data_fim_dt:
+                movimentos_filtrados.append(movimento)
+
+        movimentos = movimentos_filtrados
 
         # Inicializar saldo acumulado
         saldo_acum = saldo_inicial["abertura_debito"] - saldo_inicial["abertura_credito"] if saldo_inicial else 0.0
@@ -125,7 +148,7 @@ def get_extracto(request: ExtractoRequest):
             item["saldo_acumulado"] = saldo_acum
             extracto_completo.append(item)
 
-            # If payment, append sub-document lines (informational, no balance impact)
+            # If payment (diário 05, código 5701), append sub-document lines
             if str(item.get("codigo_diario")) == "05" and int(item.get("codigo_documento") or 0) == 5701:
                 numero_pagamento = item.get("numero_documento", "")
                 if numero_pagamento:
@@ -160,6 +183,7 @@ def get_extracto(request: ExtractoRequest):
                     except Exception as e:
                         print(f"Erro ao buscar documentos de pagamento: {e}")
 
+
         # Add final balance line
         extracto_completo.append({
             "tipo": "saldo_final",
@@ -175,6 +199,15 @@ def get_extracto(request: ExtractoRequest):
             request.codigo_conta
         )
 
+        # Marcar documentos por regularizar no extracto
+        numeros_por_regularizar = set(str(doc.get("numero_documento", "")).strip() for doc in documentos_por_regularizar if doc.get("numero_documento"))
+
+        for item in extracto_completo:
+            if item.get("tipo") == "movimento":
+                numero_doc = str(item.get("numero_documento", "")).strip() if item.get("numero_documento") else ""
+                if numero_doc in numeros_por_regularizar:
+                    item["por_regularizar"] = True
+
         return {
             "saldo_inicial": saldo_inicial,
             "extracto_completo": extracto_completo,
@@ -183,6 +216,30 @@ def get_extracto(request: ExtractoRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Serve static files from frontend build
+frontend_dir = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
+if os.path.exists(frontend_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dir, 'assets')), name="assets")
+
+@app.get("/")
+async def serve_root():
+    """Serve index.html for SPA"""
+    index_file = os.path.join(frontend_dir, 'index.html')
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"error": "Frontend not built"}
+
+@app.get("/{path_name:path}")
+async def serve_spa(path_name: str):
+    """Serve index.html for all non-API routes (SPA routing)"""
+    if path_name.startswith('api/'):
+        return {"error": "Not found"}
+
+    index_file = os.path.join(frontend_dir, 'index.html')
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    return {"error": "Frontend not built"}
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8002)

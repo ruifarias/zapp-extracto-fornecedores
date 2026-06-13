@@ -44,10 +44,19 @@ A conexão usa Windows Authentication (GIWINDOWS):
 ## Tabelas Utilizadas
 
 - `TB0001CntAcumulPOC` - Saldos iniciais por conta (abertura_debito, abertura_credito, saldo_actual)
-- `TB0001CntLancLin` - Movimentos de contabilidade (diários 02, 04, 05; débito/crédito)
+- `TB0001CntLancLin` - Movimentos de contabilidade (diários 01 Caixa/Bancos, 02 Compras, 04 Despesas Gerais, 05 Pagamentos; débito/crédito)
 - `TB0001TesPagamento` - Dados dos pagamentos (diário 05, código 5701)
-- `TB0001TesDocRegAbatidos` - Documentos regularizados por pagamento (invoices/notas de crédito abatidas)
+- `TB0001TesDocRegAbatidos` - Documentos regularizados por pagamento (invoices/notas de crédito abatidas; código 27 N/Pagamento do diário 01)
 - `TB0001CntDocReg` - Documentos por regularizar (invoices/notas de crédito com saldo pendente)
+
+## Códigos de Documento Utilizados
+
+- **21**: V/Factura (diário 04)
+- **27**: N/Pagamento (diário 01 - Caixa/Bancos)
+- **201**: V/Factura (diário 04)
+- **3302**: V/Factura (diário 02)
+- **3502**: V/Nota Crédito (diário 02)
+- **5701**: Pagamento (diário 05)
 
 ## Funcionalidades Principais
 
@@ -114,7 +123,7 @@ npm install
 ### Executar
 ```bash
 # Terminal 1 - Backend
-python -m backend.main  # Porta 8001
+python -m backend.main  # Porta 8002
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev  # Porta 5173
@@ -123,7 +132,7 @@ cd frontend && npm run dev  # Porta 5173
 Acede em `http://localhost:5173`
 
 **Portas:**
-- Backend: 8001 (não conflita com zapp-reposicoes que usa 8000)
+- Backend: 8002
 - Frontend: 5173
 
 ### Build Produção
@@ -134,7 +143,7 @@ npm run build
 
 ## Notas Importantes
 
-- Frontend faz proxy de `/api` para `http://localhost:8000`
+- Frontend faz proxy de `/api` para `http://localhost:8002`
 - Saldo acumulado é calculado em tempo real no backend
 - Débitos são movimentos positivos, Créditos são negativos
 - Pagamentos reduzem o saldo do fornecedor (débito)
