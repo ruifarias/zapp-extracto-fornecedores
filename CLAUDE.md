@@ -1,5 +1,7 @@
 # Zapp - Extracto Fornecedor
 
+**⚠️ PORTA FIXA: Esta aplicação utiliza SEMPRE a porta 8002**
+
 ## Visão Geral
 
 Aplicação interactiva para consultar e visualizar extractos de conta corrente de fornecedores a partir da base de dados DBClassico. O projecto é completamente independente e reutiliza a mesma conexão e estrutura de dados.
