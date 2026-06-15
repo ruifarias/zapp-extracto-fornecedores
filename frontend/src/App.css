@@ -27,18 +27,21 @@ h3 {
   background-color: #1a1a1a;
   border-radius: 8px;
   border: 1px solid #444;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 .form-group label {
   font-weight: 500;
   font-size: 0.9em;
   color: #b0b0b0;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 .form-group input,
@@ -48,6 +51,8 @@ h3 {
   border-radius: 4px;
   background-color: #242424;
   color: rgba(255, 255, 255, 0.87);
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 1em;
 }
 
 .form-group input:focus,
@@ -59,9 +64,9 @@ h3 {
 
 button {
   padding: 0.7em 1.5em;
-  background-color: #646cff;
+  background-color: #000000;
   color: white;
-  border: none;
+  border: 1px solid #333;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
@@ -71,7 +76,8 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background-color: #5458e0;
+  background-color: #646cff;
+  border-color: #646cff;
 }
 
 button:disabled {
@@ -170,9 +176,28 @@ button:disabled {
   color: #8bc34a;
 }
 
-.extracto-table td:nth-child(6),
+.extracto-table tbody tr.documento-por-regularizar {
+  background-color: #3a2a1a !important;
+  border-left: 4px solid #ff9800 !important;
+}
+
+.extracto-table tbody tr.documento-por-regularizar td {
+  color: #ffb74d !important;
+  background-color: inherit !important;
+}
+
+.extracto-table tbody tr.documento-por-regularizar:hover {
+  background-color: #4a3a2a !important;
+}
+
+.extracto-table td:nth-child(6) {
+  text-align: left;
+  font-size: 0.9em;
+}
+
 .extracto-table td:nth-child(7),
-.extracto-table td:nth-child(8) {
+.extracto-table td:nth-child(8),
+.extracto-table td:nth-child(9) {
   text-align: right;
   font-weight: 500;
 }
@@ -222,6 +247,7 @@ button:disabled {
 }
 
 .saldo-acumulado {
+  text-align: right;
   font-weight: 600;
   color: #4caf50;
 }
@@ -310,12 +336,28 @@ button:disabled {
   background-color: #1f1f1f;
 }
 
+.notas-devolvidas-section td:nth-child(7),
+.notas-devolvidas-section td:nth-child(8),
+.notas-devolvidas-section td:nth-child(9),
+.notas-devolvidas-section td:nth-child(10) {
+  text-align: right;
+  font-weight: 500;
+}
+
 .notas-devolvidas-section tbody tr.documento-devolvido-row {
   background-color: #2a1a2a;
 }
 
 .notas-devolvidas-section tbody tr.documento-devolvido-row td {
   color: #c084fc;
+}
+
+.documentos-regularizar-section td:nth-child(7),
+.documentos-regularizar-section td:nth-child(8),
+.documentos-regularizar-section td:nth-child(9),
+.documentos-regularizar-section td:nth-child(10) {
+  text-align: right;
+  font-weight: 500;
 }
 
 .documentos-regularizar-section tbody tr.documento-vencido {
@@ -351,6 +393,121 @@ button:disabled {
   background-color: #1a1a1a;
   border-radius: 4px;
   margin-top: 20px;
+}
+
+@media print {
+  body,
+  .container,
+  .extracto-table table,
+  .documentos-regularizar-section table,
+  .notas-devolvidas-section table {
+    background-color: white !important;
+    color: #000 !important;
+  }
+
+  .extracto-table tbody tr.documento-por-regularizar {
+    background-color: white !important;
+  }
+
+  .extracto-table tbody tr.documento-por-regularizar td {
+    background-color: white !important;
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+
+  .filters {
+    background-color: white !important;
+    border: 1px solid #ccc !important;
+    color: #000 !important;
+  }
+
+  .filters input,
+  .filters select,
+  .filters label {
+    background-color: white !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+
+  button {
+    display: none;
+  }
+
+  h1,
+  h3 {
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+
+  .saldo-inicial,
+  .saldo-inicial p,
+  .saldo-inicial strong {
+    background-color: #f5f5f5 !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+  }
+
+  .extracto-table th {
+    background-color: #e0e0e0 !important;
+    color: #000 !important;
+    border-color: #999 !important;
+  }
+
+  .extracto-table tbody tr {
+    background-color: white !important;
+    color: #000 !important;
+  }
+
+  .extracto-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+  }
+
+  .extracto-table tbody tr.saldo-inicial-row,
+  .extracto-table tbody tr.saldo-final-row,
+  .extracto-table tbody tr.documento-pagamento-row {
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
+  }
+
+  .saldo-acumulado {
+    color: #000 !important;
+  }
+
+  .documentos-regularizar-section th,
+  .notas-devolvidas-section th {
+    background-color: #e0e0e0 !important;
+    color: #000 !important;
+    border-color: #999 !important;
+  }
+
+  .documentos-regularizar-section tbody tr,
+  .notas-devolvidas-section tbody tr {
+    background-color: white !important;
+    color: #000 !important;
+  }
+
+  .documentos-regularizar-section tbody tr:nth-child(even),
+  .notas-devolvidas-section tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+  }
+
+  .documentos-regularizar-section tbody tr.documento-regularizar-row,
+  .notas-devolvidas-section tbody tr.documento-devolvido-row {
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
+  }
+
+  .documentos-regularizar-section tbody tr.documento-vencido,
+  .notas-devolvidas-section tbody tr.documento-vencido {
+    background-color: #ffe0e0 !important;
+    color: #000 !important;
+    border-color: #cc0000 !important;
+  }
+
+  .vencido-coluna,
+  .saldo-pendente {
+    color: #000 !important;
+  }
 }
 
 @media (max-width: 768px) {

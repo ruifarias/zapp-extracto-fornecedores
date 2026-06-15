@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import './App.css'
 
 interface Conta {
@@ -24,6 +26,7 @@ interface ExtractoItem {
   liquidacao?: string
   saldo_actual_db?: number
   parent_idx?: number
+  por_regularizar?: boolean
 }
 
 function App() {
@@ -38,6 +41,8 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [descricaoContaSelecionada, setDescricaoContaSelecionada] = useState('')
+  const [exportingPdf, setExportingPdf] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     fetchContas()
@@ -98,6 +103,12 @@ function App() {
     if (!codigoDocumento) return '-'
     const codigo = String(codigoDocumento).trim()
     switch (codigo) {
+      case '21':
+        return 'V/Factura'
+      case '27':
+        return 'N/Pagamento'
+      case '201':
+        return 'V/Factura'
       case '3302':
         return 'V/Factura'
       case '3502':
@@ -122,9 +133,172 @@ function App() {
     }
   }
 
+  const exportToPdf = async () => {
+    if (!exportRef.current) return
+
+    setExportingPdf(true)
+    try {
+      // Clone the element and apply print styles
+      const clonedElement = exportRef.current.cloneNode(true) as HTMLElement
+      const tempContainer = document.createElement('div')
+      tempContainer.style.position = 'absolute'
+      tempContainer.style.left = '-9999px'
+      tempContainer.style.width = exportRef.current.offsetWidth + 'px'
+      tempContainer.appendChild(clonedElement)
+      document.body.appendChild(tempContainer)
+
+      // Remove buttons from the clone
+      clonedElement.querySelectorAll('button').forEach(btn => {
+        btn.remove()
+      })
+
+      // Apply print-friendly styles to all elements
+      clonedElement.querySelectorAll('*').forEach((el) => {
+        const htmlEl = el as HTMLElement
+
+        // Estilos especiais para documentos por regularizar
+        if (htmlEl.classList.contains('documento-por-regularizar')) {
+          htmlEl.style.setProperty('background-color', 'white', 'important')
+          htmlEl.querySelectorAll('td').forEach((td) => {
+            const tdEl = td as HTMLElement
+            tdEl.style.setProperty('background-color', 'white', 'important')
+            tdEl.style.setProperty('color', '#000', 'important')
+            tdEl.style.setProperty('font-weight', 'bold', 'important')
+          })
+        } else {
+          // Estilos padrão para todos os outros elementos
+          htmlEl.style.setProperty('background-color', 'white', 'important')
+          htmlEl.style.setProperty('color', '#000', 'important')
+        }
+      })
+
+      const canvas = await html2canvas(clonedElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      })
+
+      document.body.removeChild(tempContainer)
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+
+      // Margins in mm
+      const marginLeft = 10
+      const marginTop = 10
+      const marginRight = 10
+      const marginBottom = 25      // 2.5cm na primeira página
+      const marginTopOther = 25    // 2.5cm na segunda página+
+      const marginBottomOther = 10 // 1cm na segunda página+
+
+      const imgWidth = pageWidth - marginLeft - marginRight
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      // Page 1: 1cm top, 2.5cm bottom
+      const spaceFirstPage = pageHeight - marginTop - marginBottom
+
+      // Other pages: 2.5cm top, 1cm bottom
+      const spaceOtherPages = pageHeight - marginTopOther - marginBottomOther
+
+      // Calculate total number of pages first
+      let totalPages = 1
+      if (imgHeight > spaceFirstPage) {
+        let tempPixelY = 0
+        const pixelsPerMM = canvas.height / imgHeight
+
+        while (true) {
+          const isFirstPage = tempPixelY === 0
+          const availableHeight = isFirstPage ? spaceFirstPage : spaceOtherPages
+          const sourceHeight = Math.min(
+            availableHeight * pixelsPerMM,
+            canvas.height - tempPixelY
+          )
+
+          tempPixelY += sourceHeight
+          if (tempPixelY >= canvas.height) break
+          totalPages++
+        }
+      }
+
+      if (imgHeight <= spaceFirstPage) {
+        // Image fits on one page
+        pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, imgHeight)
+        // Add page number
+        pdf.setFontSize(10)
+        pdf.text(`1/${totalPages}`, pageWidth - marginRight - 10, pageHeight - 5, { align: 'right' })
+      } else {
+        // Need multiple pages - split image properly without overlaps
+        let currentPixelY = 0  // Current position in source canvas pixels
+        const pixelsPerMM = canvas.height / imgHeight
+
+        for (let pageIdx = 0; ; pageIdx++) {
+          if (pageIdx > 0) {
+            pdf.addPage()
+          }
+
+          const isFirstPage = pageIdx === 0
+          const availableHeight = isFirstPage ? spaceFirstPage : spaceOtherPages
+          const currentMarginTop = isFirstPage ? marginTop : marginTopOther
+
+          // Calculate how many pixels to extract for this page
+          const sourceHeight = Math.min(
+            availableHeight * pixelsPerMM,
+            canvas.height - currentPixelY
+          )
+
+          // Create a temporary canvas for this page
+          const pageCanvas = document.createElement('canvas')
+          pageCanvas.width = canvas.width
+          pageCanvas.height = sourceHeight
+
+          const ctx = pageCanvas.getContext('2d')
+          if (ctx) {
+            // Extract the correct portion from source image
+            ctx.drawImage(
+              canvas,
+              0, currentPixelY,
+              canvas.width, sourceHeight,
+              0, 0,
+              canvas.width, sourceHeight
+            )
+
+            const pageImgData = pageCanvas.toDataURL('image/png')
+            const pageImgHeight = (sourceHeight * imgWidth) / canvas.width
+
+            pdf.addImage(pageImgData, 'PNG', marginLeft, currentMarginTop, imgWidth, pageImgHeight)
+          }
+
+          // Add page number to footer
+          pdf.setFontSize(10)
+          pdf.text(`${pageIdx + 1}/${totalPages}`, pageWidth - marginRight - 10, pageHeight - 5, { align: 'right' })
+
+          currentPixelY += sourceHeight
+
+          // Check if we've rendered all content
+          if (currentPixelY >= canvas.height) {
+            break
+          }
+        }
+      }
+
+      const fileName = `Extracto_${codigoConta}_${ano}.pdf`
+      pdf.save(fileName)
+    } catch (err) {
+      console.error('Erro ao exportar PDF:', err)
+      setError('Erro ao exportar para PDF')
+    } finally {
+      setExportingPdf(false)
+    }
+  }
+
   return (
     <div className="container">
-      <h1>Extracto de Conta Corrente</h1>
+      <div ref={exportRef}>
+        <h1>Extracto de Conta Corrente</h1>
 
       <div className="filters">
         <div className="form-group">
@@ -205,7 +379,7 @@ function App() {
               {extracto.map((item, idx) => (
                 <tr
                   key={idx}
-                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''} ${item.tipo === 'saldo_final' ? 'saldo-final-row' : ''}`}
+                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''} ${item.tipo === 'saldo_final' ? 'saldo-final-row' : ''} ${item.por_regularizar ? 'documento-por-regularizar' : ''}`}
                 >
                   <td>{item.tipo === 'saldo_final' ? '' : formatDate(item.data_hora || item.data)}</td>
                   <td>
@@ -286,7 +460,7 @@ function App() {
           <>
             {docsRegularizar.length > 0 && (
               <div className="documentos-regularizar-section">
-                <h3>Documentos Por Regularizar</h3>
+                <h3>Documentos Por Regularizar em: {formatDate(new Date().toISOString())}</h3>
                 <table>
                   <thead>
                     <tr>
@@ -335,7 +509,7 @@ function App() {
 
             {notasDevolvidas.length > 0 && (
               <div className="notas-devolvidas-section">
-                <h3>Notas de Devolução não creditadas</h3>
+                <h3>Notas de Devolução não creditadas em: {formatDate(new Date().toISOString())}</h3>
                 <table>
                   <thead>
                     <tr>
@@ -384,9 +558,18 @@ function App() {
           </>
         )
       })()}
+      </div>
 
       {extracto.length === 0 && !error && saldoInicial && (
         <div className="no-data">Sem movimentos para o período seleccionado</div>
+      )}
+
+      {extracto.length > 0 && (
+        <div style={{ textAlign: 'center', marginTop: '30px', paddingBottom: '20px' }}>
+          <button onClick={exportToPdf} disabled={exportingPdf}>
+            {exportingPdf ? 'Exportando...' : 'Exportar PDF'}
+          </button>
+        </div>
       )}
     </div>
   )

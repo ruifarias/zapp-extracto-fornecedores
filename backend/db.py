@@ -49,7 +49,7 @@ def get_saldo_inicial(ano: int, codigo_conta: str, codigo_moeda: str = "001"):
         return None
 
 def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_fim):
-    """Obter movimentos de contabilidade (débito/crédito) da conta - Diários 02, 04 e 05"""
+    """Obter movimentos de contabilidade (débito/crédito) da conta - Diários 01, 02, 04 e 05"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -69,13 +69,11 @@ def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_
         FROM [DBClassico].[dbo].[TB0001CntLancLin]
         WHERE Ano = ?
             AND Codigo_Conta = ?
-            AND Codigo_Diario IN ('02', '04', '05')
-            AND Data_Hora >= ?
-            AND Data_Hora <= ?
+            AND Codigo_Diario IN ('01', '02', '04', '05')
         ORDER BY Data_Hora
         """
 
-        cursor.execute(query, (ano, codigo_conta, data_inicio, data_fim))
+        cursor.execute(query, (ano, codigo_conta))
         rows = cursor.fetchall()
         conn.close()
 
@@ -257,3 +255,4 @@ def get_contas_disponiveis(ano: int = None):
     except Exception as e:
         print(f"Erro ao obter contas: {e}")
         return []
+
