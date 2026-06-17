@@ -37,3 +37,14 @@ dist/
 *.swo
 *~
 .DS_Store
+
+# Logs
+*.log
+
+# TypeScript build info
+*.tsbuildinfo
+vite.config.d.ts
+
+# Debug and test files
+backend/test_*.py
+backend/debug_*.py
