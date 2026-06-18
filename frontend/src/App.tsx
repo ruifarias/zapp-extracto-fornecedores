@@ -298,7 +298,7 @@ function App() {
   return (
     <div className="container">
       <div ref={exportRef}>
-        <h1>Extracto de Conta Corrente</h1>
+        <h1>CLÁSSICO DESPORTIVO - Extracto de Conta Corrente de Fornecedores</h1>
 
       <div className="filters">
         <div className="form-group">
