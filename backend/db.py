@@ -122,7 +122,7 @@ def get_documentos_pagamento(ano: int, numero_pagamento: str, codigo_entidade: s
             td.Numero_Documento,
             td.Data_Recepcao,
             td.Data_Vencimento,
-            td.Data_Documento,
+            td.Vossa_Data_Documento,
             td.Valor_Documento,
             td.Valor_Abatido,
             td.Liquidacao
@@ -135,7 +135,7 @@ def get_documentos_pagamento(ano: int, numero_pagamento: str, codigo_entidade: s
             AND tp.Numero = ?
             AND tp.Codigo_Documento = 5701
             AND tp.Codigo_Entidade_Fornecedor = ?
-        ORDER BY td.Data_Documento
+        ORDER BY td.Vossa_Data_Documento
         """
 
         cursor.execute(query, (ano, numero_pagamento, codigo_entidade))
@@ -182,9 +182,9 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
         query = """
         SELECT *
         FROM [DBClassico].[dbo].[TB0001CntDocReg]
-        WHERE YEAR(Data_Documento) = ?
+        WHERE YEAR(Vossa_Data_Documento) = ?
             AND Codigo_Conta = ?
-        ORDER BY Data_Documento
+        ORDER BY Vossa_Data_Documento
         """
 
         cursor.execute(query, (ano, codigo_conta))
@@ -205,7 +205,7 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
                 "tipo_movimento": row_dict.get('Tipo_Movimento'),
                 "codigo_documento": row_dict.get('Codigo_Documento'),
                 "descricao_doc_regul": row_dict.get('Descricao_Doc_Regul'),
-                "data_documento": row_dict.get('Data_Documento'),
+                "data_documento": row_dict.get('Vossa_Data_Documento'),
                 "data_recepcao": row_dict.get('Data_Recepcao'),
                 "data_vencimento": row_dict.get('Data_Vencimento'),
                 "valor_documento": float(row_dict.get('Valor_Documento', 0)) if row_dict.get('Valor_Documento') else 0.0,

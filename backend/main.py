@@ -52,6 +52,72 @@ def get_documentos_pagamento(ano: int, codigo_serie: str, numero: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/nota-pagamento")
+def get_nota_pagamento(ano: int, numero_pagamento: str, codigo_conta: str):
+    """Obter dados completos para a Nota de Pagamento (e-mail ao fornecedor)"""
+    try:
+        # Extrair código de entidade (fornecedor) dos últimos 4 dígitos da conta
+        codigo_entidade = codigo_conta.split(".")[-1] if "." in codigo_conta else codigo_conta[-4:]
+
+        # Extrair parte numérica do número de pagamento (ex: 'PG4706' -> 4706)
+        numero_num = int(''.join(filter(str.isdigit, numero_pagamento))) if numero_pagamento else 0
+
+        documentos = db.get_documentos_pagamento(ano, numero_num, codigo_entidade)
+
+        def iso(v):
+            return v.isoformat() if hasattr(v, "isoformat") else v
+
+        nome_fornecedor = ""
+        numero_contribuinte = ""
+        data_pagamento = None
+        documentos_pagos = []
+        total_pago = 0.0
+
+        for doc in documentos:
+            if not nome_fornecedor:
+                nome_fornecedor = doc.get("nome") or ""
+                numero_contribuinte = doc.get("numero_contribuinte") or ""
+                data_pagamento = iso(doc.get("data_pagamento"))
+
+            codigo_doc = str(doc.get("codigo_documento") or "").strip()
+            valor_documento = doc.get("valor_documento", 0.0)
+            valor_pago = doc.get("valor_abatido", 0.0)
+            # Notas de crédito (3502) são apresentadas a negativo
+            if codigo_doc == "3502":
+                valor_documento = -valor_documento
+                valor_pago = -valor_pago
+
+            total_pago += valor_pago
+            documentos_pagos.append({
+                "data_vencimento": iso(doc.get("data_vencimento")),
+                "data_recepcao": iso(doc.get("data_recepcao")),
+                "data_documento": iso(doc.get("data_documento")),
+                "codigo_documento": codigo_doc,
+                "numero_documento": doc.get("numero_documento"),
+                "valor_documento": valor_documento,
+                "valor_pago": valor_pago,
+                "liquidacao": doc.get("liquidacao"),
+                "valor_pendente": valor_documento - valor_pago,
+            })
+
+        # Documentos por regularizar à data do e-mail
+        documentos_por_regularizar = db.get_documentos_por_regularizar(ano, codigo_conta)
+        for doc in documentos_por_regularizar:
+            for k in ("data_vencimento", "data_recepcao", "data_documento"):
+                doc[k] = iso(doc.get(k))
+
+        return {
+            "numero_pagamento": numero_pagamento,
+            "nome_fornecedor": nome_fornecedor,
+            "numero_contribuinte": numero_contribuinte,
+            "data_pagamento": data_pagamento,
+            "total_pago": total_pago,
+            "documentos_pagos": documentos_pagos,
+            "documentos_por_regularizar": documentos_por_regularizar,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/extracto")
 def get_extracto(request: ExtractoRequest):
     """Gerar extracto de conta corrente com saldo inicial e movimentos"""

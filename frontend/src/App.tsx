@@ -133,6 +133,183 @@ function App() {
     }
   }
 
+  const escapeHtml = (v: any) => String(v ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+  const gerarNotaPagamento = async (item: ExtractoItem) => {
+    try {
+      const numeroPagamento = item.numero_documento || ''
+      const response = await axios.get('/api/nota-pagamento', {
+        params: {
+          ano,
+          numero_pagamento: numeroPagamento,
+          codigo_conta: codigoConta,
+        },
+      })
+      const dados = response.data
+      const dataPag = formatDate(dados.data_pagamento)
+      const assunto = `Envio de Nota de Pagamento Nº ${numeroPagamento} - Documentos Liquidados`
+
+      const liquidacaoBadge = (liq: string | undefined) => {
+        const s = String(liq || '').trim()
+        if (s === 'T') return '<span class="badge badge-total">Pago Totalmente</span>'
+        if (s === 'P') return '<span class="badge badge-parcial">Pago em Parte</span>'
+        return getLiquidacao(liq)
+      }
+
+      const linhasPagos = (dados.documentos_pagos || []).map((d: any) => `
+        <tr>
+          <td class="txt-left">${escapeHtml(formatDate(d.data_vencimento))}</td>
+          <td class="txt-left">${escapeHtml(formatDate(d.data_recepcao))}</td>
+          <td class="txt-left">${escapeHtml(formatDate(d.data_documento))}</td>
+          <td class="txt-left">${escapeHtml(getTipoDocumento(d.codigo_documento))}</td>
+          <td class="txt-left">${escapeHtml(d.numero_documento || '-')}</td>
+          <td>${escapeHtml(formatCurrency(d.valor_documento || 0))}</td>
+          <td>${escapeHtml(formatCurrency(d.valor_pago || 0))}</td>
+          <td class="txt-left">${liquidacaoBadge(d.liquidacao)}</td>
+          <td>${escapeHtml(formatCurrency(d.valor_pendente || 0))}</td>
+        </tr>`).join('')
+
+      const hoje = new Date()
+      const docsReg = (dados.documentos_por_regularizar || []).filter((d: any) => d.codigo_documento !== '3501')
+      const totalPorRegularizar = docsReg.reduce((acc: number, d: any) => acc + (d.valor_por_regularizar || 0), 0)
+      const linhasReg = docsReg.map((d: any) => {
+        const venc = new Date(d.data_vencimento || '')
+        const vencido = venc < hoje && (d.valor_por_regularizar || 0) > 0
+        const valorPago = (d.valor_documento || 0) - (d.valor_por_regularizar || 0)
+        return `
+        <tr class="${vencido ? 'row-vencido' : ''}">
+          <td class="txt-left">${escapeHtml(formatDate(d.data_vencimento))}</td>
+          <td class="txt-left">${vencido ? '<span class="badge badge-vencido">VENCIDO</span>' : '&mdash;'}</td>
+          <td class="txt-left">${escapeHtml(formatDate(d.data_documento))}</td>
+          <td class="txt-left">${escapeHtml(getTipoDocumento(d.codigo_documento))}</td>
+          <td class="txt-left">${escapeHtml(d.numero_documento || '-')}</td>
+          <td>${escapeHtml(formatCurrency(d.valor_documento || 0))}</td>
+          <td>${escapeHtml(formatCurrency(valorPago))}</td>
+          <td>${escapeHtml(formatCurrency(d.valor_por_regularizar || 0))}</td>
+        </tr>`
+      }).join('')
+
+      const seccaoReg = docsReg.length > 0 ? `
+        <div class="section-title pendente">Documentos Por Regularizar em ${escapeHtml(formatDate(hoje.toISOString()))}</div>
+        <table class="pendente-table total-pendente">
+          <thead>
+            <tr>
+              <th class="txt-left">Data Venc.</th><th class="txt-left">Situação</th>
+              <th class="txt-left">Data Doc.</th><th class="txt-left">Tipo</th>
+              <th class="txt-left">Nº Documento</th><th>Valor</th>
+              <th>Valor Pago</th><th>Saldo Pendente</th>
+            </tr>
+          </thead>
+          <tbody>${linhasReg}</tbody>
+          <tfoot>
+            <tr><td class="label" colspan="7">Total Por Regularizar</td><td>${escapeHtml(formatCurrency(totalPorRegularizar))}</td></tr>
+          </tfoot>
+        </table>
+        <p class="nota-pendente">* Saldo pendente apurado à data de emissão da presente nota.</p>` : ''
+
+      const emailHtml = `
+      <div class="email-wrapper" id="email-content">
+        <div class="email-header">
+          <h1>CLÁSSICO DESPORTIVO, LDA.</h1>
+          <p class="subtitle">Nota de Pagamento Nº ${escapeHtml(numeroPagamento)} &mdash; Documentos Liquidados</p>
+        </div>
+        <div class="email-body">
+          <p class="greeting">Exmos. Senhores,</p>
+          <p class="fornecedor-nome">${escapeHtml(dados.nome_fornecedor || '')}</p>
+          <p class="intro-text">Na data, <strong>${escapeHtml(dataPag)}</strong>, procedemos ao pagamento dos seguintes documentos, no valor total de: <span class="valor-destaque">${escapeHtml(formatCurrency(dados.total_pago || 0).padStart(12))}</span></p>
+          <div class="section-title">Relação de Documentos Pagos</div>
+          <table>
+            <thead>
+              <tr>
+                <th class="txt-left">Data Venc.</th><th class="txt-left">Data Receção</th>
+                <th class="txt-left">Data Doc.</th><th class="txt-left">Tipo</th>
+                <th class="txt-left">Nº Documento</th><th>Valor</th>
+                <th>Valor Pago</th><th class="txt-left">Liquidação</th><th>Valor Pendente</th>
+              </tr>
+            </thead>
+            <tbody>${linhasPagos}</tbody>
+            <tfoot>
+              <tr><td class="label" colspan="6">Total Pago</td><td>${escapeHtml(formatCurrency(dados.total_pago || 0))}</td><td colspan="2"></td></tr>
+            </tfoot>
+          </table>
+          ${seccaoReg}
+          <p class="assinatura">Com os melhores cumprimentos,<br><strong>Departamento Financeiro</strong><br>Clássico Desportivo</p>
+        </div>
+        <div class="email-footer">
+          <strong>CLÁSSICO DESPORTIVO, LDA.</strong><br>
+          Este e-mail foi gerado automaticamente a partir do sistema de gestão de conta corrente de fornecedores.<br>
+          Em caso de divergência, agradecemos o favor de nos contactar.
+        </div>
+      </div>`
+
+      const estilos = `
+        body{margin:0;padding:24px;background:#eef1f5;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#2c3e50}
+        .toolbar{max-width:820px;margin:0 auto 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .toolbar button{background:#1a3a5c;color:#fff;border:0;padding:9px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+        .toolbar button:hover{background:#2c5f8a}
+        .toolbar .assunto{flex:1;min-width:260px;font-size:12.5px;color:#566;background:#fff;border:1px solid #d4dae0;border-radius:6px;padding:9px 12px}
+        .email-wrapper{max-width:820px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+        .email-header{background:linear-gradient(135deg,#1a3a5c,#2c5f8a);color:#fff;padding:28px 36px}
+        .email-header h1{margin:0;font-size:22px;letter-spacing:.5px}
+        .email-header .subtitle{margin:6px 0 0;font-size:14px;opacity:.85}
+        .email-body{padding:32px 36px}
+        .greeting{font-size:15px;margin-bottom:4px}
+        .fornecedor-nome{font-size:17px;font-weight:600;color:#1a3a5c;margin-bottom:18px}
+        .intro-text{font-size:14.5px;line-height:1.6;margin-bottom:8px}
+        .valor-destaque{display:inline-block;background:#e8f4ec;color:#1e7e44;font-weight:700;font-size:15px;padding:3px 10px;border-radius:6px;font-family:'Consolas','Courier New',monospace;white-space:pre}
+        .section-title{font-size:15px;font-weight:600;color:#1a3a5c;border-left:4px solid #2c5f8a;padding-left:10px;margin:28px 0 14px}
+        .section-title.pendente{border-left-color:#c0392b;color:#922b21}
+        table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px}
+        thead th{background:#1a3a5c;color:#fff;font-weight:600;text-align:right;padding:9px 8px;white-space:nowrap}
+        thead th:first-child,thead th.txt-left{text-align:left}
+        tbody td{padding:8px;border-bottom:1px solid #e4e8ed;text-align:right;white-space:nowrap}
+        tbody td.txt-left{text-align:left}
+        tbody tr:nth-child(even){background:#f7f9fb}
+        .pendente-table thead th{background:#922b21}
+        .row-vencido td{color:#c0392b;font-weight:600}
+        .badge{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:10px}
+        .badge-total{background:#d5f0df;color:#1e7e44}
+        .badge-parcial{background:#fdeccd;color:#9a6700}
+        .badge-vencido{background:#fadbd8;color:#c0392b}
+        tfoot td{padding:11px 8px;font-weight:700;font-size:13.5px;text-align:right;border-top:2px solid #1a3a5c;color:#1a3a5c}
+        .total-pendente tfoot td{border-top-color:#922b21;color:#922b21}
+        .nota-pendente{font-size:12.5px;color:#7a7a7a;font-style:italic;margin-top:4px}
+        .email-footer{background:#f4f6f8;padding:22px 36px;font-size:12.5px;color:#6b7785;line-height:1.6;border-top:1px solid #e4e8ed}
+        .email-footer strong{color:#1a3a5c}
+        .assinatura{margin-top:18px;font-size:14px;color:#2c3e50}
+        @media print{.toolbar{display:none}body{padding:0;background:#fff}.email-wrapper{box-shadow:none;max-width:100%}}`
+
+      const win = window.open('', '_blank')
+      if (!win) {
+        setError('Não foi possível abrir a janela. Verifique o bloqueador de pop-ups.')
+        return
+      }
+      win.document.write(`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8">
+        <title>${escapeHtml(assunto)}</title><style>${estilos}</style></head>
+        <body>
+          <div class="toolbar">
+            <button onclick="copiarEmail()">📋 Copiar e-mail</button>
+            <button onclick="window.print()">🖨️ Imprimir / PDF</button>
+            <input class="assunto" readonly value="${escapeHtml(assunto)}" onclick="this.select()" title="Assunto do e-mail (clique para selecionar)">
+          </div>
+          ${emailHtml}
+          <script>
+            function copiarEmail(){
+              var el=document.getElementById('email-content');
+              var r=document.createRange();r.selectNode(el);
+              var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+              try{document.execCommand('copy');s.removeAllRanges();alert('E-mail copiado! Cole (Ctrl+V) no Outlook ou no seu cliente de e-mail.');}
+              catch(e){alert('Não foi possível copiar automaticamente. Selecione manualmente o conteúdo.');}
+            }
+          <\/script>
+        </body></html>`)
+      win.document.close()
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Erro ao gerar nota de pagamento')
+    }
+  }
+
   const exportToPdf = async () => {
     if (!exportRef.current) return
 
@@ -405,7 +582,21 @@ function App() {
                         ? 'Documento Pago'
                         : item.tipo === 'saldo_final'
                           ? 'Saldo Final'
-                          : getTipoDocumento(item.codigo_documento)
+                          : (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              {getTipoDocumento(item.codigo_documento)}
+                              {String(item.codigo_documento).trim() === '5701' && (
+                                <button
+                                  type="button"
+                                  className="btn-email-nota"
+                                  title="Gerar Nota de Pagamento (e-mail)"
+                                  onClick={() => gerarNotaPagamento(item)}
+                                >
+                                  ✉
+                                </button>
+                              )}
+                            </span>
+                          )
                     }
                   </td>
                   <td>
