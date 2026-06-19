@@ -245,11 +245,11 @@ function App() {
 
       const estilos = `
         body{margin:0;padding:24px;background:#eef1f5;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#2c3e50}
-        .toolbar{max-width:820px;margin:0 auto 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .toolbar{max-width:900px;margin:0 auto 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .toolbar button{background:#1a3a5c;color:#fff;border:0;padding:9px 16px;border-radius:6px;font-size:13px;cursor:pointer}
         .toolbar button:hover{background:#2c5f8a}
         .toolbar .assunto{flex:1;min-width:260px;font-size:12.5px;color:#566;background:#fff;border:1px solid #d4dae0;border-radius:6px;padding:9px 12px}
-        .email-wrapper{max-width:820px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+        .email-wrapper{max-width:900px;margin:0 auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.08)}
         .email-header{background:linear-gradient(135deg,#1a3a5c,#2c5f8a);color:#fff;padding:28px 36px}
         .email-header h1{margin:0;font-size:22px;letter-spacing:.5px}
         .email-header .subtitle{margin:6px 0 0;font-size:14px;opacity:.85}
