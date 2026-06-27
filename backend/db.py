@@ -196,20 +196,42 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
         conn.close()
 
         documentos = []
+        hoje = datetime.now().date()
+
         for row in rows:
             # Create dict with all columns
             row_dict = {column_names[i]: row[i] for i in range(len(column_names))}
 
+            tipo_movimento = row_dict.get('Tipo_Movimento', '')
+            valor_documento = float(row_dict.get('Valor_Documento', 0)) if row_dict.get('Valor_Documento') else 0.0
+            valor_por_regularizar = float(row_dict.get('Valor_Por_Regularizar', 0)) if row_dict.get('Valor_Por_Regularizar') else 0.0
+
+            # Credit documents (C) are debts to be paid, so they should be negative
+            if tipo_movimento == 'C':
+                valor_documento = -valor_documento
+                valor_por_regularizar = -valor_por_regularizar
+
+            # Check if document is overdue
+            data_vencimento = row_dict.get('Data_Vencimento')
+            vencido = False
+            if data_vencimento:
+                if isinstance(data_vencimento, datetime):
+                    data_vencimento_dt = data_vencimento.date()
+                else:
+                    data_vencimento_dt = data_vencimento
+                vencido = data_vencimento_dt < hoje
+
             documentos.append({
                 "numero_documento": row_dict.get('Numero_Documento'),
-                "tipo_movimento": row_dict.get('Tipo_Movimento'),
+                "tipo_movimento": tipo_movimento,
                 "codigo_documento": row_dict.get('Codigo_Documento'),
                 "descricao_doc_regul": row_dict.get('Descricao_Doc_Regul'),
                 "data_documento": row_dict.get('Vossa_Data_Documento'),
                 "data_recepcao": row_dict.get('Data_Recepcao'),
-                "data_vencimento": row_dict.get('Data_Vencimento'),
-                "valor_documento": float(row_dict.get('Valor_Documento', 0)) if row_dict.get('Valor_Documento') else 0.0,
-                "valor_por_regularizar": float(row_dict.get('Valor_Por_Regularizar', 0)) if row_dict.get('Valor_Por_Regularizar') else 0.0
+                "data_vencimento": data_vencimento,
+                "valor_documento": valor_documento,
+                "valor_por_regularizar": valor_por_regularizar,
+                "vencido": vencido
             })
 
         return documentos

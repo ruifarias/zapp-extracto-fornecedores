@@ -676,7 +676,7 @@ function App() {
 
                       const data_vencimento = new Date(doc.data_vencimento || '')
                       const hoje = new Date()
-                      const vencido = data_vencimento < hoje && (doc.valor_por_regularizar || 0) > 0
+                      const vencido = data_vencimento < hoje && Math.abs(doc.valor_por_regularizar || 0) > 0
 
                       return (
                         <tr key={idx} className={`documento-regularizar-row ${vencido ? 'documento-vencido' : ''}`}>
@@ -725,7 +725,7 @@ function App() {
 
                       const data_vencimento = new Date(doc.data_vencimento || '')
                       const hoje = new Date()
-                      const vencido = data_vencimento < hoje && (doc.valor_por_regularizar || 0) > 0
+                      const vencido = data_vencimento < hoje && Math.abs(doc.valor_por_regularizar || 0) > 0
 
                       return (
                         <tr key={idx} className={`documento-devolvido-row ${vencido ? 'documento-vencido' : ''}`}>
