@@ -581,26 +581,15 @@ button:disabled {
   background-color: #f0f4f8;
 }
 
-.extracto-table tbody tr.cheque-predatado-row {
-  color: #ff0000;
-  font-weight: 600;
-}
-
 .extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
   background-color: #000 !important;
   color: #ff0000 !important;
   font-weight: 700;
-}
-
-.extracto-table tbody tr.cheque-predatado-row td:nth-child(5)::before {
-  content: 'Pré-Datado';
-}
-
-.extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
   font-size: 0;
 }
 
 .extracto-table tbody tr.cheque-predatado-row td:nth-child(5)::before {
+  content: 'Pré-Datado';
   font-size: 13.5px;
 }
 
