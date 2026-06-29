@@ -777,8 +777,8 @@ function App() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Data Emissão</th>
                       <th>Data Vencimento</th>
+                      <th>Data Emissão</th>
                       <th>Nº Cheque</th>
                       <th>Entidade Sacada</th>
                       <th>Local Emissão</th>
@@ -788,7 +788,7 @@ function App() {
                   </thead>
                   <tbody>
                     {chequesPredatados.map((cheque, idx) => {
-                      const data_vencimento = new Date(cheque.data_vencimento || '')
+                      const data_vencimento = new Date(cheque.data_emissao || '')
                       const hoje = new Date()
                       const vencido = data_vencimento < hoje
 
