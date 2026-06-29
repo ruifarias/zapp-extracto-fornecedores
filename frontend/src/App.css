@@ -577,26 +577,31 @@ button:disabled {
   font-family: 'Courier New', monospace;
 }
 
-.cheques-predatados-section tbody td.vencido-coluna {
-  text-align: center;
-  font-weight: 700;
-  background-color: #000 !important;
-  color: #ff0000 !important;
-}
-
 .cheques-predatados-section tbody tr:nth-child(even) {
   background-color: #f0f4f8;
 }
 
-.cheques-predatados-section tbody tr.cheque-vencido {
-  background-color: #fadbd8 !important;
-  color: #c0392b;
+.extracto-table tbody tr.cheque-predatado-row {
+  color: #ff0000;
   font-weight: 600;
 }
 
-.cheques-predatados-section tbody tr.cheque-vencido td.vencido-coluna {
-  color: #c0392b;
+.extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
+  background-color: #000 !important;
+  color: #fff !important;
   font-weight: 700;
+}
+
+.extracto-table tbody tr.cheque-predatado-row td:nth-child(5)::before {
+  content: 'Pré-Datado';
+}
+
+.extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
+  font-size: 0;
+}
+
+.extracto-table tbody tr.cheque-predatado-row td:nth-child(5)::before {
+  font-size: 13.5px;
 }
 
 @media (max-width: 768px) {

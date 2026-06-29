@@ -578,10 +578,14 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {extracto.map((item, idx) => (
+              {extracto.map((item, idx) => {
+                const numerosChequesSet = new Set(chequesPredatados.map(c => String(c.numero_documento || '').trim()))
+                const isChequePredatado = numerosChequesSet.has(String(item.numero_documento || '').trim())
+
+                return (
                 <tr
                   key={idx}
-                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''} ${item.tipo === 'saldo_final' ? 'saldo-final-row' : ''} ${item.por_regularizar ? 'documento-por-regularizar' : ''}`}
+                  className={`${item.tipo === 'saldo_inicial' ? 'saldo-inicial-row' : ''} ${item.tipo === 'documento_pagamento' ? 'documento-pagamento-row' : ''} ${item.tipo === 'saldo_final' ? 'saldo-final-row' : ''} ${item.por_regularizar ? 'documento-por-regularizar' : ''} ${isChequePredatado ? 'cheque-predatado-row' : ''}`}
                 >
                   <td>{item.tipo === 'saldo_final' ? '' : formatDate(item.data_hora || item.data)}</td>
                   <td>
@@ -662,7 +666,8 @@ function App() {
                   </td>
                   <td className="saldo-acumulado">{item.tipo === 'documento_pagamento' || item.tipo === 'saldo_final' ? (item.tipo === 'saldo_final' ? formatCurrency(item.saldo_acumulado) : '-') : formatCurrency(item.saldo_acumulado)}</td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -779,32 +784,32 @@ function App() {
                   <thead>
                     <tr>
                       <th>Data Vencimento</th>
-                      <th>Vencido</th>
                       <th>Data Emissão</th>
+                      <th>Pagamento Nº</th>
                       <th>Cheque Pré-datado Nº</th>
-                      <th>Pagamento</th>
                       <th>Entidade Sacada</th>
                       <th>Local Emissão</th>
                       <th>Valor</th>
+                      <th>Acumulado</th>
                     </tr>
                   </thead>
                   <tbody>
                     {chequesPredatados.map((cheque, idx) => {
-                      const data_vencimento = new Date(cheque.data_emissao || '')
-                      const hoje = new Date()
-                      const vencido = data_vencimento < hoje
-                      const chequeNum = `${cheque.codigo_movimento_caixa || ''}${cheque.numero_movimento_caixa || ''}`.trim()
+                      const chequeNum = `${cheque.codigo_movimento_caixa || ''} ${cheque.numero_movimento_caixa || ''}`.trim()
+                      const saldo_acumulado = chequesPredatados
+                        .slice(0, idx + 1)
+                        .reduce((acc, c) => acc + (c.valor || 0), 0)
 
                       return (
-                        <tr key={idx} className={`cheque-row ${vencido ? 'cheque-vencido' : ''}`}>
+                        <tr key={idx} className="cheque-row">
                           <td>{formatDate(cheque.data_emissao)}</td>
-                          <td className="vencido-coluna">{vencido ? 'SIM' : '-'}</td>
                           <td>{formatDate(cheque.data_vencimento)}</td>
-                          <td className="numero-cheque">{chequeNum || '-'}</td>
                           <td>{cheque.numero_documento || '-'}</td>
+                          <td className="numero-cheque">{chequeNum || '-'}</td>
                           <td>{cheque.entidade_sacada || '-'}</td>
                           <td>{cheque.local_emissao || '-'}</td>
                           <td className="valor-coluna">{formatCurrency(-(cheque.valor || 0))}</td>
+                          <td className="saldo-acumulado valor-coluna">{formatCurrency(-saldo_acumulado)}</td>
                         </tr>
                       )
                     })}
