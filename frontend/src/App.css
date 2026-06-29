@@ -535,7 +535,7 @@ button:disabled {
 .cheques-predatados-section {
   margin-top: 30px;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: #000;
   border-radius: 8px;
   border-left: 4px solid #2c5f8a;
 }
@@ -579,12 +579,6 @@ button:disabled {
 .cheques-predatados-section tbody td.numero-cheque {
   font-weight: 600;
   color: #fff;
-  font-family: 'Courier New', monospace;
-}
-
-.cheques-predatados-section tbody td.valor-coluna,
-.cheques-predatados-section tbody td.saldo-acumulado {
-  color: #00ff00;
 }
 
 .extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
