@@ -579,7 +579,9 @@ button:disabled {
 
 .cheques-predatados-section tbody td.vencido-coluna {
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
+  background-color: #000 !important;
+  color: #ff0000 !important;
 }
 
 .cheques-predatados-section tbody tr:nth-child(even) {

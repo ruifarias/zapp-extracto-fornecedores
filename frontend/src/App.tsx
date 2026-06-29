@@ -39,6 +39,7 @@ interface Cheque {
   entidade_sacada?: string
   local_emissao?: string
   numero_movimento_caixa?: string
+  codigo_movimento_caixa?: string
 }
 
 function App() {
@@ -773,17 +774,18 @@ function App() {
 
             {chequesPredatados.length > 0 && (
               <div className="cheques-predatados-section">
-                <h3>Cheques Pré-datados Não Conciliados</h3>
+                <h3>Cheques Pré-Datados em Aberto</h3>
                 <table>
                   <thead>
                     <tr>
                       <th>Data Vencimento</th>
+                      <th>Vencido</th>
                       <th>Data Emissão</th>
-                      <th>Nº Cheque</th>
+                      <th>Cheque Pré-datado Nº</th>
+                      <th>Pagamento</th>
                       <th>Entidade Sacada</th>
                       <th>Local Emissão</th>
                       <th>Valor</th>
-                      <th>Status Vencido</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -791,16 +793,18 @@ function App() {
                       const data_vencimento = new Date(cheque.data_emissao || '')
                       const hoje = new Date()
                       const vencido = data_vencimento < hoje
+                      const chequeNum = `${cheque.codigo_movimento_caixa || ''}${cheque.numero_movimento_caixa || ''}`.trim()
 
                       return (
                         <tr key={idx} className={`cheque-row ${vencido ? 'cheque-vencido' : ''}`}>
                           <td>{formatDate(cheque.data_emissao)}</td>
+                          <td className="vencido-coluna">{vencido ? 'SIM' : '-'}</td>
                           <td>{formatDate(cheque.data_vencimento)}</td>
-                          <td className="numero-cheque">{cheque.numero_documento || '-'}</td>
+                          <td className="numero-cheque">{chequeNum || '-'}</td>
+                          <td>{cheque.numero_documento || '-'}</td>
                           <td>{cheque.entidade_sacada || '-'}</td>
                           <td>{cheque.local_emissao || '-'}</td>
-                          <td className="valor-coluna">{formatCurrency(cheque.valor || 0)}</td>
-                          <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
+                          <td className="valor-coluna">{formatCurrency(-(cheque.valor || 0))}</td>
                         </tr>
                       )
                     })}
