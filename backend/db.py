@@ -239,6 +239,64 @@ def get_documentos_por_regularizar(ano: int, codigo_conta: str):
         print(f"Erro ao obter documentos por regularizar: {e}")
         return []
 
+def get_cheques_predatados(codigo_entidade: str):
+    """Obter cheques pré-datados não conciliados de uma entidade (fornecedor)"""
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        query = """
+        SELECT
+            Codigo_Entidade,
+            Data_Emissao,
+            Data_Documento AS Data_Vencimento,
+            Data_Documento,
+            Numero_Documento,
+            Codigo_Movimento_Caixa,
+            Numero_Movimento_Caixa,
+            Valor,
+            Entidade_Sacada,
+            Local_Emissao,
+            Conciliado,
+            Data_Hora
+        FROM [DBClassico].[dbo].[TB0001TesMovCaixa]
+        WHERE Codigo_Movimento_Caixa = 'CHP'
+            AND Conciliado = 'N'
+            AND Codigo_Entidade = ?
+        ORDER BY Data_Documento
+        """
+
+        cursor.execute(query, (codigo_entidade,))
+        rows = cursor.fetchall()
+
+        # Get column names
+        column_names = [desc[0] for desc in cursor.description]
+        conn.close()
+
+        cheques = []
+        for row in rows:
+            row_dict = {column_names[i]: row[i] for i in range(len(column_names))}
+
+            cheques.append({
+                "codigo_entidade": row_dict.get('Codigo_Entidade'),
+                "data_emissao": row_dict.get('Data_Emissao'),
+                "data_vencimento": row_dict.get('Data_Vencimento'),
+                "data_documento": row_dict.get('Data_Documento'),
+                "numero_documento": row_dict.get('Numero_Documento'),
+                "codigo_movimento_caixa": row_dict.get('Codigo_Movimento_Caixa'),
+                "numero_movimento_caixa": row_dict.get('Numero_Movimento_Caixa'),
+                "valor": float(row_dict.get('Valor', 0)) if row_dict.get('Valor') else 0.0,
+                "entidade_sacada": row_dict.get('Entidade_Sacada'),
+                "local_emissao": row_dict.get('Local_Emissao'),
+                "conciliado": row_dict.get('Conciliado'),
+                "data_hora": row_dict.get('Data_Hora')
+            })
+
+        return cheques
+    except Exception as e:
+        print(f"Erro ao obter cheques pré-datados: {e}")
+        return []
+
 def get_contas_disponiveis(ano: int = None):
     """Obter lista de contas 22.1.1.1.* e 22.1.1.2.* com movimentos e descrição"""
     try:

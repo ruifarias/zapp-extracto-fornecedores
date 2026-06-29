@@ -52,6 +52,18 @@ def get_documentos_pagamento(ano: int, codigo_serie: str, numero: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/cheques-predatados")
+def get_cheques_predatados(codigo_conta: str):
+    """Obter cheques pré-datados não conciliados de um fornecedor"""
+    try:
+        # Extrair código de entidade (fornecedor) dos últimos 4 dígitos da conta
+        codigo_entidade = codigo_conta.split(".")[-1] if "." in codigo_conta else codigo_conta[-4:]
+
+        cheques = db.get_cheques_predatados(codigo_entidade)
+        return {"cheques": cheques}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/nota-pagamento")
 def get_nota_pagamento(ano: int, numero_pagamento: str, codigo_conta: str):
     """Obter dados completos para a Nota de Pagamento (e-mail ao fornecedor)"""

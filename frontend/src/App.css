@@ -532,6 +532,71 @@ button:disabled {
   }
 }
 
+.cheques-predatados-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #2c5f8a;
+}
+
+.cheques-predatados-section table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  margin-top: 15px;
+}
+
+.cheques-predatados-section thead th {
+  background-color: #2c5f8a;
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px;
+  border: 1px solid #1a3a5c;
+}
+
+.cheques-predatados-section thead th:not(:first-child) {
+  text-align: center;
+}
+
+.cheques-predatados-section tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e4e8ed;
+  text-align: left;
+}
+
+.cheques-predatados-section tbody td.valor-coluna {
+  text-align: right;
+  font-weight: 500;
+}
+
+.cheques-predatados-section tbody td.numero-cheque {
+  font-weight: 600;
+  color: #1a3a5c;
+  font-family: 'Courier New', monospace;
+}
+
+.cheques-predatados-section tbody td.vencido-coluna {
+  text-align: center;
+  font-weight: 600;
+}
+
+.cheques-predatados-section tbody tr:nth-child(even) {
+  background-color: #f0f4f8;
+}
+
+.cheques-predatados-section tbody tr.cheque-vencido {
+  background-color: #fadbd8 !important;
+  color: #c0392b;
+  font-weight: 600;
+}
+
+.cheques-predatados-section tbody tr.cheque-vencido td.vencido-coluna {
+  color: #c0392b;
+  font-weight: 700;
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 10px;

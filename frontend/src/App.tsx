@@ -29,6 +29,18 @@ interface ExtractoItem {
   por_regularizar?: boolean
 }
 
+interface Cheque {
+  codigo_entidade: string
+  data_emissao?: string
+  data_vencimento?: string
+  data_documento?: string
+  numero_documento?: string
+  valor: number
+  entidade_sacada?: string
+  local_emissao?: string
+  numero_movimento_caixa?: string
+}
+
 function App() {
   const [contas, setContas] = useState<Conta[]>([])
   const [codigoConta, setCodigoConta] = useState('')
@@ -38,6 +50,7 @@ function App() {
   const [extracto, setExtracto] = useState<ExtractoItem[]>([])
   const [saldoInicial, setSaldoInicial] = useState<any>(null)
   const [documentosPorRegularizar, setDocumentosPorRegularizar] = useState<any[]>([])
+  const [chequesPredatados, setChequesPredatados] = useState<Cheque[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [descricaoContaSelecionada, setDescricaoContaSelecionada] = useState('')
@@ -79,6 +92,17 @@ function App() {
       setSaldoInicial(response.data.saldo_inicial)
       setExtracto(response.data.extracto_completo || [])
       setDocumentosPorRegularizar(response.data.documentos_por_regularizar || [])
+
+      // Buscar cheques pré-datados
+      try {
+        const chequesResponse = await axios.get('/api/cheques-predatados', {
+          params: { codigo_conta: codigoConta }
+        })
+        setChequesPredatados(chequesResponse.data.cheques || [])
+      } catch (chequesErr) {
+        console.error('Erro ao buscar cheques:', chequesErr)
+        setChequesPredatados([])
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erro ao gerar extracto')
     } finally {
@@ -739,6 +763,44 @@ function App() {
                           <td className="valor-coluna">{formatCurrency(valor_pago)}</td>
                           <td className="saldo-pendente valor-coluna">{formatCurrency(doc.valor_por_regularizar || 0)}</td>
                           <td className="saldo-acumulado valor-coluna">{formatCurrency(saldo_acumulado)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {chequesPredatados.length > 0 && (
+              <div className="cheques-predatados-section">
+                <h3>Cheques Pré-datados Não Conciliados</h3>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data Emissão</th>
+                      <th>Data Vencimento</th>
+                      <th>Nº Cheque</th>
+                      <th>Entidade Sacada</th>
+                      <th>Local Emissão</th>
+                      <th>Valor</th>
+                      <th>Status Vencido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chequesPredatados.map((cheque, idx) => {
+                      const data_vencimento = new Date(cheque.data_vencimento || '')
+                      const hoje = new Date()
+                      const vencido = data_vencimento < hoje
+
+                      return (
+                        <tr key={idx} className={`cheque-row ${vencido ? 'cheque-vencido' : ''}`}>
+                          <td>{formatDate(cheque.data_emissao)}</td>
+                          <td>{formatDate(cheque.data_vencimento)}</td>
+                          <td className="numero-cheque">{cheque.numero_documento || '-'}</td>
+                          <td>{cheque.entidade_sacada || '-'}</td>
+                          <td>{cheque.local_emissao || '-'}</td>
+                          <td className="valor-coluna">{formatCurrency(cheque.valor || 0)}</td>
+                          <td className="vencido-coluna">{vencido ? 'VENCIDO' : '-'}</td>
                         </tr>
                       )
                     })}
