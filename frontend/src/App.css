@@ -588,7 +588,7 @@ button:disabled {
 
 .extracto-table tbody tr.cheque-predatado-row td:nth-child(5) {
   background-color: #000 !important;
-  color: #fff !important;
+  color: #ff0000 !important;
   font-weight: 700;
 }
 
