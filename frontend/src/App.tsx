@@ -119,7 +119,7 @@ function App() {
 
   const formatCurrency = (value: number) => {
     // Converter -0 para 0 para evitar mostrar "-0,00€"
-    if (Object.is(value, -0)) {
+    if (Object.is(value, -0) || (Math.abs(value) < 0.005 && value < 0)) {
       value = 0
     }
     return new Intl.NumberFormat('pt-PT', {
