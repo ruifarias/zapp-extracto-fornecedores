@@ -49,28 +49,33 @@ def get_saldo_inicial(ano: int, codigo_conta: str, codigo_moeda: str = "001"):
         return None
 
 def get_movimentos_contabilidade(ano: int, codigo_conta: str, data_inicio, data_fim):
-    """Obter movimentos de contabilidade (débito/crédito) da conta - Diários 01, 02, 04 e 05"""
+    """Obter movimentos de contabilidade (débito/crédito) da conta - Diários 01, 02, 04 e 05
+    Usa DATA_DOCUMENTO de TB0001CntLancCab (data correta do documento) em vez de Data_Hora"""
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
         query = """
         SELECT
-            Ano,
-            Codigo_Diario,
-            Numero_Documento_Interno,
-            Numero_Linha,
-            Tipo_Movimento,
-            Codigo_Conta,
-            Valor,
-            Codigo_Documento,
-            Numero_Documento,
-            Data_Hora
-        FROM [DBClassico].[dbo].[TB0001CntLancLin]
-        WHERE Ano = ?
-            AND Codigo_Conta = ?
-            AND Codigo_Diario IN ('01', '02', '04', '05')
-        ORDER BY Data_Hora
+            lin.Ano,
+            lin.Codigo_Diario,
+            lin.Numero_Documento_Interno,
+            lin.Numero_Linha,
+            lin.Tipo_Movimento,
+            lin.Codigo_Conta,
+            lin.Valor,
+            lin.Codigo_Documento,
+            lin.Numero_Documento,
+            cab.Data_Documento
+        FROM [DBClassico].[dbo].[TB0001CntLancLin] lin
+        LEFT JOIN [DBClassico].[dbo].[TB0001CntLancCab] cab
+            ON lin.Codigo_Diario = cab.Codigo_Diario
+            AND lin.Numero_Documento_Interno = cab.Numero_Documento_Interno
+            AND lin.Ano = cab.Ano
+        WHERE lin.Ano = ?
+            AND lin.Codigo_Conta = ?
+            AND lin.Codigo_Diario IN ('01', '02', '04', '05')
+        ORDER BY cab.Data_Documento
         """
 
         cursor.execute(query, (ano, codigo_conta))
